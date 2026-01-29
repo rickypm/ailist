@@ -26,7 +26,6 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
   bool _isInitialized = false;
   bool _isPartner = false;
   
-  // Separate lists for user and partner conversations
   List<dynamic> _userConversations = [];
   List<dynamic> _partnerConversations = [];
   bool _loadingUser = false;
@@ -64,7 +63,6 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
     final dataProvider = context.read<DataProvider>();
     
     if (authProvider.user != null) {
-      // Check if user has a professional profile
       if (dataProvider.selectedProfessional == null) {
         await dataProvider.loadProfessionalByUserId(authProvider.user!.id);
       }
@@ -85,7 +83,6 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
 
     if (authProvider.user == null) return;
 
-    // Load user conversations (My Requests)
     setState(() => _loadingUser = true);
     try {
       await dataProvider.loadConversations(authProvider.user!.id, isPartner: false);
@@ -95,7 +92,6 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
     }
     if (mounted) setState(() => _loadingUser = false);
 
-    // Load partner conversations (Client Inbox) if user is a partner
     if (dataProvider.selectedProfessional != null) {
       setState(() => _loadingPartner = true);
       try {
@@ -120,13 +116,11 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
     if (authProvider.user == null) return;
 
     if (_tabController.index == 0) {
-      // Refresh My Requests
       setState(() => _loadingUser = true);
       await dataProvider.loadConversations(authProvider.user!.id, isPartner: false);
       _userConversations = List.from(dataProvider.conversations);
       if (mounted) setState(() => _loadingUser = false);
     } else {
-      // Refresh Client Inbox
       if (dataProvider.selectedProfessional != null) {
         setState(() => _loadingPartner = true);
         await dataProvider.loadConversations(
@@ -142,11 +136,16 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      // ✅ FIX: Dark background
+      backgroundColor: AppColors.backgroundNavy,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.backgroundNavy,
+        elevation: 0,
         automaticallyImplyLeading: false,
-        title: Text('Inbox', style: AppTextStyles.h3),
+        title: Text(
+          'Inbox',
+          style: AppTextStyles.h3.copyWith(color: AppColors.white),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Iconsax.refresh, color: AppColors.white),
@@ -160,6 +159,7 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
                 indicatorWeight: 3,
                 labelColor: AppColors.primary,
                 unselectedLabelColor: AppColors.textMuted,
+                dividerColor: Colors.transparent,
                 tabs: [
                   Tab(
                     child: Row(
@@ -197,7 +197,6 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
           ? TabBarView(
               controller: _tabController,
               children: [
-                // Tab 1: My Requests (user conversations)
                 RefreshIndicator(
                   onRefresh: _refreshCurrentTab,
                   color: AppColors.primary,
@@ -209,7 +208,6 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
                     emptySubtitle: 'Start a conversation by contacting a service provider',
                   ),
                 ),
-                // Tab 2: Client Inbox (partner conversations)
                 RefreshIndicator(
                   onRefresh: _refreshCurrentTab,
                   color: AppColors.primary,
@@ -279,33 +277,42 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
     required String emptySubtitle,
   }) {
     if (!_isInitialized || isLoading) {
-      return ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: 5,
-        itemBuilder: (context, index) {
-          return const Padding(
-            padding: EdgeInsets.only(bottom: 16),
-            child: ShimmerListTile(),
-          );
-        },
+      return Container(
+        color: AppColors.backgroundNavy,
+        child: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: 5,
+          itemBuilder: (context, index) {
+            return const Padding(
+              padding: EdgeInsets.only(bottom: 16),
+              child: ShimmerListTile(),
+            );
+          },
+        ),
       );
     }
 
     if (conversations.isEmpty) {
-      return EmptyState(
-        icon: Iconsax.message,
-        title: emptyTitle,
-        subtitle: emptySubtitle,
+      return Container(
+        color: AppColors.backgroundNavy,
+        child: EmptyState(
+          icon: Iconsax.message,
+          title: emptyTitle,
+          subtitle: emptySubtitle,
+        ),
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: conversations.length,
-      itemBuilder: (context, index) {
-        final conversation = conversations[index];
-        return _buildConversationTile(conversation, isPartnerView);
-      },
+    return Container(
+      color: AppColors.backgroundNavy,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        itemCount: conversations.length,
+        itemBuilder: (context, index) {
+          final conversation = conversations[index];
+          return _buildConversationTile(conversation, isPartnerView);
+        },
+      ),
     );
   }
 
@@ -320,84 +327,101 @@ class _InboxScreenState extends State<InboxScreen> with SingleTickerProviderStat
         ? conversation.professionalUnreadCount
         : conversation.userUnreadCount;
 
-    return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      leading: AvatarWidget(
-        imageUrl: avatarUrl,
-        name: displayName,
-        size: 52,
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: hasUnread 
+            ? AppColors.primary.withOpacity(0.1) 
+            : AppColors.surfaceNavy,
+        borderRadius: BorderRadius.circular(12),
+        border: hasUnread 
+            ? Border.all(color: AppColors.primary.withOpacity(0.3), width: 1)
+            : null,
       ),
-      title: Row(
-        children: [
-          Expanded(
-            child: Text(
-              displayName,
-              style: TextStyle(
-                fontWeight: hasUnread ? FontWeight.bold : FontWeight.w500,
-                fontSize: 15,
-              ),
-            ),
-          ),
-          Text(
-            conversation.timeAgo,
-            style: TextStyle(
-              fontSize: 12,
-              color: hasUnread ? AppColors.primary : AppColors.textMuted,
-              fontWeight: hasUnread ? FontWeight.w600 : FontWeight.normal,
-            ),
-          ),
-        ],
-      ),
-      subtitle: Row(
-        children: [
-          // Show icon to indicate type
-          Icon(
-            isPartnerView ? Iconsax.user : Iconsax.briefcase,
-            size: 14,
-            color: AppColors.textMuted,
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              conversation.lastMessagePreview ?? 'No messages yet',
-              style: TextStyle(
-                fontSize: 13,
-                color: hasUnread ? AppColors.textPrimary : AppColors.textSecondary,
-                fontWeight: hasUnread ? FontWeight.w500 : FontWeight.normal,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          if (hasUnread)
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
-              ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: AvatarWidget(
+          imageUrl: avatarUrl,
+          name: displayName,
+          size: 52,
+        ),
+        title: Row(
+          children: [
+            Expanded(
               child: Text(
-                unreadCount > 9 ? '9+' : unreadCount.toString(),
-                style: const TextStyle(
-                  color: AppColors.white,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
+                displayName,
+                style: TextStyle(
+                  fontWeight: hasUnread ? FontWeight.bold : FontWeight.w500,
+                  fontSize: 15,
+                  color: AppColors.white,  // ✅ White text
                 ),
               ),
             ),
-        ],
-      ),
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => ChatScreen(
-              conversation: conversation,
-              isPartnerView: isPartnerView,
+            Text(
+              conversation.timeAgo,
+              style: TextStyle(
+                fontSize: 12,
+                color: hasUnread ? AppColors.primary : AppColors.textMuted,
+                fontWeight: hasUnread ? FontWeight.w600 : FontWeight.normal,
+              ),
             ),
+          ],
+        ),
+        subtitle: Padding(
+          padding: const EdgeInsets.only(top: 4),
+          child: Row(
+            children: [
+              Icon(
+                isPartnerView ? Iconsax.user : Iconsax.briefcase,
+                size: 14,
+                color: AppColors.textMuted,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  conversation.lastMessagePreview ?? 'No messages yet',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: hasUnread 
+                        ? AppColors.white.withOpacity(0.8) 
+                        : AppColors.textMuted,
+                    fontWeight: hasUnread ? FontWeight.w500 : FontWeight.normal,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              if (hasUnread)
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    unreadCount > 9 ? '9+' : unreadCount.toString(),
+                    style: const TextStyle(
+                      color: AppColors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+            ],
           ),
-        ).then((_) => _refreshCurrentTab());
-      },
+        ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => ChatScreen(
+                conversation: conversation,
+                isPartnerView: isPartnerView,
+              ),
+            ),
+          ).then((_) => _refreshCurrentTab());
+        },
+      ),
     );
   }
 }

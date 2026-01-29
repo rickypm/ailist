@@ -24,8 +24,8 @@ class AppConfig {
   // APP INFO
   // ============================================================
   
-  static const String appName = 'welist';
-  static const String appDisplayName = 'WeList';
+  static const String appName = 'ailist';
+  static const String appDisplayName = 'AiList';
   static const String appVersion = '1.0.0';
   static const String appBuildNumber = '1';
   static const String appTagline = 'Find local services with AI';
@@ -216,12 +216,12 @@ class AppConfig {
   // CONTACT & LEGAL
   // ============================================================
   
-  static const String supportEmail = 'support@welist.app';
-  static const String privacyPolicyUrl = 'https://welist.app/privacy';
-  static const String termsOfServiceUrl = 'https://welist.app/terms';
-  static const String websiteUrl = 'https://welist.app';
+  static const String supportEmail = 'support@ailist.app';
+  static const String privacyPolicyUrl = 'https://ailist.app/privacy';
+  static const String termsOfServiceUrl = 'https://ailist.app/terms';
+  static const String websiteUrl = 'https://ailist.app';
   static const String supportPhone = '+919876543210'; 
-  static const String appStoreUrl = 'https://play.google.com/store/apps/details?id=com.welist.app';
+  static const String appStoreUrl = 'https://play.google.com/store/apps/details?id=com.ailist.app';
 
   // ============================================================
   // CITIES

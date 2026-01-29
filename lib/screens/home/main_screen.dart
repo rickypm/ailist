@@ -7,6 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/data_provider.dart';
 import '../../models/professional_model.dart';
 import '../../models/shop_model.dart';
+import '../../services/ai_service.dart';
 import '../../widgets/chat/chat_message_widget.dart';
 import '../../widgets/chat/category_grid.dart';
 import '../../widgets/shop/shop_card.dart';
@@ -54,6 +55,7 @@ class _MainScreenState extends State<MainScreen> {
     setState(() => _selectedTabIndex = index);
     
     if (index == 1) {
+      // Shops tab - load shops
       final dataProvider = context.read<DataProvider>();
       if (dataProvider.shops.isEmpty) {
         dataProvider.searchShops('', city: AppConfig.defaultCity);
@@ -64,6 +66,9 @@ class _MainScreenState extends State<MainScreen> {
   void _handleSend() async {
     final query = _inputController.text.trim();
     if (query.isEmpty) return;
+
+    // ✅ FIX: Switch to Services tab when sending a message
+    setState(() => _selectedTabIndex = 0);
 
     final dataProvider = context.read<DataProvider>();
     _inputController.clear();
@@ -248,6 +253,8 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildHeader() {
+    final dataProvider = context.watch<DataProvider>();
+    final userCity = dataProvider.currentUser?.city ?? AppConfig.defaultCity;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Column(
@@ -271,7 +278,7 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                   const SizedBox(width: 8),
                   const Text(
-                    'WeList',
+                    'AiList',  
                     style: TextStyle(
                       color: AppColors.white,
                       fontSize: 24,
@@ -287,12 +294,12 @@ class _MainScreenState extends State<MainScreen> {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: AppColors.borderNavy),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Iconsax.location, color: AppColors.primary, size: 14),
-                    SizedBox(width: 4),
+                    const Icon(Iconsax.location, color: AppColors.primary, size: 14),
+                    const SizedBox(width: 4),
                     Text(
-                      'Shillong',
+                      userCity,
                       style: TextStyle(
                         color: AppColors.white,
                         fontSize: 12,
@@ -355,121 +362,155 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  // ✅ FIX: Completely rewritten to properly handle tab switching
   Widget _buildContent() {
     return Consumer<DataProvider>(
       builder: (context, dataProvider, _) {
+        // ✅ FIX: If Shops tab is selected, ALWAYS show shops
+        if (_selectedTabIndex == 1) {
+          return _buildShopsContent(dataProvider);
+        }
+        
+        // Services tab - show chat messages OR categories
         final messages = dataProvider.chatMessages;
         final matchedProfessionals = dataProvider.aiMatchedProfessionals;
         
-        // ✅ Debug logging
         debugPrint('🔍 Building content - Messages: ${messages.length}, Professionals: ${matchedProfessionals.length}');
         
+        // If no messages, show category grid
         if (messages.isEmpty) {
-          return _buildEmptyState();
+          return _buildCategoriesContent(dataProvider);
         }
         
-        return ListView.builder(
-          controller: _scrollController,
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          itemCount: messages.length + (dataProvider.aiTyping ? 1 : 0),
-          itemBuilder: (context, index) {
-            // Typing indicator
-            if (index == messages.length && dataProvider.aiTyping) {
-              return Container(
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                child: const Row(
-                  children: [
-                    SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    SizedBox(width: 12),
-                    Text(
-                      'Searching...',
-                      style: TextStyle(
-                        color: AppColors.textSecondary,
-                        fontSize: 15,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }
-            
-            final message = messages[index];
-            
-            // ✅ FIX: Check if this is the LAST assistant message (not typing)
-            final isLastAssistantMessage = !message.isUser && 
-                index == messages.length - 1 && 
-                !dataProvider.aiTyping;
-            
-            debugPrint('🔍 Message $index: isUser=${message.isUser}, isLastAssistant=$isLastAssistantMessage');
-            
-            // ✅ FIX: Only pass professionals to the last assistant message
-            final professionalsToShow = isLastAssistantMessage ? matchedProfessionals : null;
-            
-            if (isLastAssistantMessage) {
-              debugPrint('🔍 Passing ${professionalsToShow?.length ?? 0} professionals to last message');
-            }
-            
-            return ChatMessageWidget(
-              message: message,
-              onProfessionalTap: (professional) {
-                debugPrint('🔍 Professional tapped: ${professional.displayName}');
-                _navigateToProfessionalDetail(professional);
+        // Show chat conversation
+        return _buildChatContent(dataProvider, messages, matchedProfessionals);
+      },
+    );
+  }
+
+  // ✅ NEW: Separate method for shops content
+  Widget _buildShopsContent(DataProvider dataProvider) {
+    if (dataProvider.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+    
+    if (dataProvider.shops.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Iconsax.shop,
+              size: 64,
+              color: AppColors.textMuted.withOpacity(0.5),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'No shops found nearby',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: () {
+                dataProvider.searchShops('', city: AppConfig.defaultCity);
               },
-              onShopTap: _navigateToShopDetail,
-              professionals: professionalsToShow,
-            );
-          },
+              child: const Text('Refresh'),
+            ),
+          ],
+        ),
+      );
+    }
+    
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: dataProvider.shops.length,
+      itemBuilder: (context, index) {
+        final shop = dataProvider.shops[index];
+        return ShopCard(
+          shop: shop,
+          onTap: () => _navigateToShopDetail(shop),
         );
       },
     );
   }
 
-  Widget _buildEmptyState() {
+  // ✅ NEW: Separate method for categories content
+  Widget _buildCategoriesContent(DataProvider dataProvider) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Consumer<DataProvider>(
-        builder: (context, dataProvider, _) {
-          if (_selectedTabIndex == 1) {
-            if (dataProvider.isLoading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (dataProvider.shops.isEmpty) {
-              return const Center(
-                child: Text(
-                  'No shops found nearby.',
-                  style: TextStyle(color: AppColors.textSecondary),
-                ),
-              );
-            }
-            return ListView.builder(
-              padding: const EdgeInsets.only(top: 8),
-              itemCount: dataProvider.shops.length,
-              itemBuilder: (context, index) {
-                final shop = dataProvider.shops[index];
-                return ShopCard(
-                  shop: shop,
-                  onTap: () => _navigateToShopDetail(shop),
-                );
-              },
-            );
-          }
-
-          return CategoryGrid(
-            categories: dataProvider.categories,
-            onCategoryTap: (category) {
-              _inputController.text = 'Find me a ${category.name.toLowerCase()}';
-              _handleSend();
-            },
-          );
+      child: CategoryGrid(
+        categories: dataProvider.categories,
+        onCategoryTap: (category) {
+          _inputController.text = 'Find me a ${category.name.toLowerCase()}';
+          _handleSend();
         },
       ),
+    );
+  }
+
+  // ✅ NEW: Separate method for chat content
+  Widget _buildChatContent(
+    DataProvider dataProvider,
+    List<dynamic> messages,
+    List<ProfessionalModel> matchedProfessionals,
+  ) {
+    return ListView.builder(
+      controller: _scrollController,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: messages.length + (dataProvider.aiTyping ? 1 : 0),
+      itemBuilder: (context, index) {
+        // Typing indicator
+        if (index == messages.length && dataProvider.aiTyping) {
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: const Row(
+              children: [
+                SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.primary,
+                  ),
+                ),
+                SizedBox(width: 12),
+                Text(
+                  'Searching...',
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        
+        final message = messages[index];
+        
+        // Check if this is the LAST assistant message
+        final isLastAssistantMessage = !message.isUser && 
+            index == messages.length - 1 && 
+            !dataProvider.aiTyping;
+        
+        // Only pass professionals to the last assistant message
+        final professionalsToShow = isLastAssistantMessage ? matchedProfessionals : null;
+        
+        return ChatMessageWidget(
+          message: message,
+          onProfessionalTap: (professional) {
+            debugPrint('🔍 Professional tapped: ${professional.displayName}');
+            _navigateToProfessionalDetail(professional);
+          },
+          onShopTap: _navigateToShopDetail,
+          professionals: professionalsToShow,
+        );
+      },
     );
   }
 

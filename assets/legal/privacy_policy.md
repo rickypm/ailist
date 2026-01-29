@@ -1,6 +1,6 @@
 # PRIVACY POLICY
 
-**Welist Privacy Policy**
+**ailist Privacy Policy**
 
 **Last Updated:** January 2025  
 **Effective Date:** January 2025  
@@ -38,7 +38,7 @@
 
 ### 1.1 About This Policy
 
-This Privacy Policy ("Policy") describes how **Welist** ("we," "us," "our," or the "Company"), operated by **[Your Registered Company Name]**, a company incorporated under the laws of India with its registered office at **[Your Registered Address]**, collects, uses, stores, processes, transfers, shares, and protects your personal information when you use our mobile application, website, and related services (collectively, the "Service" or "Platform").
+This Privacy Policy ("Policy") describes how **ailist** ("we," "us," "our," or the "Company"), operated by **[Your Registered Company Name]**, a company incorporated under the laws of India with its registered office at **[Your Registered Address]**, collects, uses, stores, processes, transfers, shares, and protects your personal information when you use our mobile application, website, and related services (collectively, the "Service" or "Platform").
 
 ### 1.2 Our Commitment
 
@@ -58,8 +58,8 @@ By accessing or using our Service, you acknowledge that you have read, understoo
 ### 1.4 Scope
 
 This Policy applies to:
-- All users of the Welist mobile application
-- All users of the Welist website
+- All users of the ailist mobile application
+- All users of the ailist website
 - Service Seekers ("Users" or "Customers")
 - Service Providers ("Partners" or "Professionals")
 - Visitors who browse without creating an account
@@ -74,7 +74,7 @@ For the purposes of this Privacy Policy:
 |------|------------|
 | **Personal Data** | Any information that relates to an identified or identifiable individual |
 | **Sensitive Personal Data** | Passwords, financial information, health data, biometric data, sexual orientation, political opinions, religious beliefs, and any data specified under applicable law |
-| **Data Controller** | Welist, who determines the purposes and means of processing personal data |
+| **Data Controller** | ailist, who determines the purposes and means of processing personal data |
 | **Data Processor** | Third parties who process personal data on our behalf |
 | **Processing** | Any operation performed on personal data (collection, storage, use, disclosure, deletion) |
 | **User** | Individual seeking services through our Platform |
@@ -526,7 +526,7 @@ When you delete your account:
 
 You can request deletion by:
 - Using in-app "Delete Account" option
-- Emailing privacy@welist.app
+- Emailing privacy@ailist.app
 - Writing to our Grievance Officer
 
 We will process requests within 30 days.
@@ -595,7 +595,7 @@ All users have the right to:
 | **Access** | View your personal data | In-app profile, or request export |
 | **Correction** | Fix inaccurate data | Edit profile, or contact support |
 | **Deletion** | Delete your data | Delete account, or contact support |
-| **Portability** | Receive data in portable format | Request via privacy@welist.app |
+| **Portability** | Receive data in portable format | Request via privacy@ailist.app |
 | **Withdraw Consent** | Revoke previously given consent | In-app settings, or contact support |
 
 ### 10.2 Rights Under Indian Law
@@ -634,7 +634,7 @@ California residents have:
 - Go to Settings → Privacy → Manage Data
 
 **Method 2: Email**
-- Send request to privacy@welist.app
+- Send request to privacy@ailist.app
 - Include:  Full name, registered email, specific request
 
 **Method 3: Written Request**
@@ -673,14 +673,14 @@ California residents have:
 **For Marketing:**
 - Click "Unsubscribe" in any email
 - Toggle off in Settings → Notifications
-- Email privacy@welist.app
+- Email privacy@ailist.app
 
 **For Analytics:**
 - Settings → Privacy → Analytics → Off
 - Browser:  Disable cookies
 
 **For Sensitive Data:**
-- Email privacy@welist.app
+- Email privacy@ailist.app
 - Subject:  "Withdraw Consent - Sensitive Data"
 
 **Effect of Withdrawal:**
@@ -693,7 +693,7 @@ California residents have:
 - Our service is for users 18+
 - We do not knowingly collect minor's data
 - If discovered, we delete immediately
-- Parents may report via privacy@welist.app
+- Parents may report via privacy@ailist.app
 
 ---
 
@@ -720,8 +720,8 @@ Cookies are small text files stored on your device that help us provide and impr
 | `sb-refresh-token` | Supabase | Stay logged in | 30 days |
 | `_ga` | Google Analytics | User identification | 2 years |
 | `_gid` | Google Analytics | Session identification | 24 hours |
-| `city_preference` | Welist | Remember city | 1 year |
-| `theme_preference` | Welist | Dark/light mode | 1 year |
+| `city_preference` | ailist | Remember city | 1 year |
+| `theme_preference` | ailist | Dark/light mode | 1 year |
 
 ### 12.4 Mobile App Tracking
 
@@ -804,7 +804,7 @@ If you do not want your data transferred internationally:
 
 ### 14.1 Age Requirement
 
-**Welist is strictly for users 18 years of age and older.**
+**ailist is strictly for users 18 years of age and older.**
 
 We do not knowingly: 
 - Allow users under 18 to create accounts
@@ -821,7 +821,7 @@ If we learn we have collected data from a minor:
 ### 14.3 Parental Notice
 
 If you are a parent or guardian and believe your child has provided us with personal information:
-- Contact us immediately at privacy@welist.app
+- Contact us immediately at privacy@ailist.app
 - Provide the child's username or email
 - We will verify and delete the data
 
@@ -883,7 +883,7 @@ Healthcare professionals on our Platform must:
 
 ### 15.6 Disclaimer
 
-Welist is NOT a healthcare provider. We facilitate connections only.  For emergencies, call emergency services (108/102).
+ailist is NOT a healthcare provider. We facilitate connections only.  For emergencies, call emergency services (108/102).
 
 ---
 
@@ -904,7 +904,7 @@ If you use our Platform to find legal services (lawyers, advocates, notaries), y
 ### 16.3 Attorney-Client Privilege
 
 **Important:**
-- Communications through Welist are **NOT** automatically privileged
+- Communications through ailist are **NOT** automatically privileged
 - Privilege applies only after formal engagement with an attorney
 - For confidential matters, use secure communication after engagement
 
@@ -931,7 +931,7 @@ Legal professionals on our Platform must:
 
 ### 16.6 Disclaimer
 
-Welist is NOT a law firm. Initial inquiries do not create attorney-client relationships.  For formal legal services, engage directly with the professional.
+ailist is NOT a law firm. Initial inquiries do not create attorney-client relationships.  For formal legal services, engage directly with the professional.
 
 ---
 
@@ -984,7 +984,7 @@ In accordance with the Information Technology Act, 2000 and rules thereunder, we
 **Grievance Officer:**
 - **Name:** [Grievance Officer Name]
 - **Designation:** Grievance Officer
-- **Email:** grievance@welist.app
+- **Email:** grievance@ailist.app
 - **Address:** [Your Registered Address]
 - **Phone:** [Contact Number]
 - **Working Hours:** Monday to Saturday, 10:00 AM to 6:00 PM IST
@@ -992,7 +992,7 @@ In accordance with the Information Technology Act, 2000 and rules thereunder, we
 ### 18.2 How to File a Grievance
 
 **Step 1: Submit Grievance**
-- Email grievance@welist.app
+- Email grievance@ailist.app
 - Include:  Your name, registered email, detailed description of grievance, supporting documents
 
 **Step 2: Acknowledgment**
@@ -1012,7 +1012,7 @@ In accordance with the Information Technology Act, 2000 and rules thereunder, we
 If unsatisfied with the resolution: 
 
 **Level 1:** Request review by senior management
-- Email:  escalation@welist.app
+- Email:  escalation@ailist.app
 - Response within 15 days
 
 **Level 2:** External remedies
@@ -1062,7 +1062,7 @@ After receiving notice of changes:
 
 ### 19.4 Previous Versions
 
-Previous versions of this Privacy Policy are available upon request at privacy@welist.app. 
+Previous versions of this Privacy Policy are available upon request at privacy@ailist.app. 
 
 ---
 
@@ -1070,13 +1070,13 @@ Previous versions of this Privacy Policy are available upon request at privacy@w
 
 ### 20.1 General Privacy Inquiries
 
-**Email:** privacy@welist.app
+**Email:** privacy@ailist.app
 **Subject Line:** Privacy Inquiry - [Your Topic]
 **Response Time:** Within 48 hours
 
 ### 20.2 Data Protection Officer
 
-**Email:** dpo@welist.app
+**Email:** dpo@ailist.app
 **For:** GDPR-related inquiries, formal rights requests
 
 ### 20.3 Mailing Address
@@ -1117,7 +1117,7 @@ If you are in the EEA, you have additional rights under GDPR:
 
 **EU Representative:**
 [If you have significant EEA users, appoint a representative]
-Email: eu-representative@welist.app
+Email: eu-representative@ailist.app
 
 ### 21.3 Users in California (USA)
 
@@ -1128,14 +1128,14 @@ Under CCPA, California residents have:
 - Right to non-discrimination
 
 **CCPA Contact:**
-Email: ccpa@welist.app
+Email: ccpa@ailist.app
 
 **"Do Not Sell My Personal Information":**
 We do not sell personal information.  If this changes, we will provide an opt-out. 
 
 ### 21.4 Users in Other Jurisdictions
 
-We strive to comply with applicable privacy laws in your jurisdiction. If you have specific concerns, contact privacy@welist.app.
+We strive to comply with applicable privacy laws in your jurisdiction. If you have specific concerns, contact privacy@ailist.app.
 
 ---
 
@@ -1174,4 +1174,4 @@ We strive to comply with applicable privacy laws in your jurisdiction. If you ha
 
 *This Privacy Policy was last reviewed and updated on January 2025.*
 
-*For questions, contact privacy@welist.app*
+*For questions, contact privacy@ailist.app*

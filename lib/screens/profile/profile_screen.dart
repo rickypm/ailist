@@ -42,19 +42,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final dataProvider = context.watch<DataProvider>();
-    
-    // Use dataProvider.currentUser for full user data including unlock_balance
     final user = dataProvider.currentUser;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundNavy,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: AppColors.backgroundNavy,
+        elevation: 0,
         leading: IconButton(
           icon: const Icon(Iconsax.arrow_left, color: AppColors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Profile', style: AppTextStyles.h3),
+        title: Text(
+          'Profile',
+          style: AppTextStyles.h3.copyWith(color: AppColors.white),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Iconsax.refresh, color: AppColors.white),
@@ -80,7 +82,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       padding: const EdgeInsets.all(3),
                       child: Container(
                         decoration: const BoxDecoration(
-                          color: AppColors.surface,
+                          color: AppColors.surfaceNavy,
                           shape: BoxShape.circle,
                         ),
                         child: ClipOval(
@@ -99,21 +101,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Name
+                  // Name - ✅ WHITE TEXT
                   Text(
                     user?.name ?? user?.displayNameOrEmail ?? 'User',
-                    style: AppTextStyles.h2,
+                    style: AppTextStyles.h2.copyWith(color: AppColors.white),
                   ),
                   const SizedBox(height: 8),
 
-                  // Email
+                  // Email - ✅ MUTED TEXT
                   Text(
                     user?.email ?? authProvider.user?.email ?? '',
-                    style: AppTextStyles.bodyMedium,
+                    style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textMuted),
                   ),
                   const SizedBox(height: 8),
 
-                  // Plan badge with color based on plan
+                  // Plan badge
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
@@ -268,14 +270,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  // Check if user has premium plan (plus or pro)
   bool _isPremiumPlan(UserModel? user) {
     if (user == null) return false;
     final plan = user.subscriptionPlan.toLowerCase();
     return plan == 'plus' || plan == 'pro';
   }
 
-  // Get gradient color based on plan
   Gradient _getPlanGradient(UserModel? user) {
     if (user == null) return AppColors.inputBorderGradient;
     
@@ -283,22 +283,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
     switch (plan) {
       case 'plus':
         return const LinearGradient(
-          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)], // Purple gradient for Plus
+          colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
         );
       case 'pro':
         return const LinearGradient(
-          colors: [Color(0xFFF59E0B), Color(0xFFEF4444)], // Gold/Orange gradient for Pro
+          colors: [Color(0xFFF59E0B), Color(0xFFEF4444)],
         );
       case 'basic':
         return const LinearGradient(
-          colors: [Color(0xFF3B82F6), Color(0xFF06B6D4)], // Blue gradient for Basic
+          colors: [Color(0xFF3B82F6), Color(0xFF06B6D4)],
         );
       default:
         return AppColors.inputBorderGradient;
     }
   }
 
-  // Get plan description
   String _getPlanDescription(UserModel? user) {
     if (user == null) return 'Free';
     
@@ -315,24 +314,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  // Get unlocks text - shows "Unlimited" for plus/pro
   String _getUnlocksText(UserModel? user) {
     if (user == null) return '0';
     
     final plan = user.subscriptionPlan.toLowerCase();
     
-    // Plus and Pro have unlimited unlocks
     if (plan == 'plus' || plan == 'pro') {
       return '∞ Unlimited';
     }
     
-    // Check if unlock_balance is -1 (also means unlimited)
     final unlocks = user.unlockBalance ?? 0;
     if (unlocks == -1) {
       return '∞ Unlimited';
     }
     
-    // Otherwise show the actual count
     return '$unlocks';
   }
 
@@ -340,14 +335,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       width: 94,
       height: 94,
-      color: AppColors.surfaceLight,
+      color: AppColors.surfaceNavy,
       child: Center(
         child: Text(
           name.isNotEmpty ? name[0].toUpperCase() : 'U',
           style: const TextStyle(
             fontSize: 40,
             fontWeight: FontWeight.bold,
-            color: AppColors.white,
+            color: AppColors.primary,
           ),
         ),
       ),
@@ -362,6 +357,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // ✅ Section title - visible on dark background
         Text(
           title,
           style: const TextStyle(
@@ -371,10 +367,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ),
         const SizedBox(height: 12),
+        // ✅ Section container - dark surface color
         Container(
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.surfaceNavy,
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: AppColors.borderNavy,
+              width: 1,
+            ),
           ),
           child: Column(
             children: items.asMap().entries.map((entry) {
@@ -389,7 +390,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
+                        color: AppColors.primary.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
@@ -398,13 +399,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         size: 20,
                       ),
                     ),
+                    // ✅ Title - WHITE text
                     title: Text(
                       item.title,
                       style: const TextStyle(
                         fontWeight: FontWeight.w500,
-                        color: AppColors.textPrimary,
+                        color: AppColors.white,
                       ),
                     ),
+                    // ✅ Subtitle - MUTED text
                     subtitle: item.subtitle != null
                         ? Text(
                             item.subtitle!,
@@ -422,8 +425,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onTap: item.onTap,
                   ),
                   if (!isLast)
-                    const Divider(
-                      color: AppColors.surfaceLight,
+                    Divider(
+                      color: AppColors.borderNavy,
                       height: 1,
                       indent: 16,
                       endIndent: 16,

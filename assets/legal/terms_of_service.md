@@ -4,11 +4,11 @@
 
 ## 1. Acceptance of Terms
 
-By accessing or using WeList ("the App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use the App.
+By accessing or using AiList ("the App"), you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, please do not use the App.
 
 ## 2. Description of Service
 
-WeList is a hyperlocal services marketplace that connects users seeking services with local service providers ("Partners"). The App provides: 
+AiList is a hyperlocal services marketplace that connects users seeking services with local service providers ("Partners"). The App provides: 
 
 - Service discovery and search
 - AI-powered recommendations
@@ -60,7 +60,7 @@ Refunds are handled on a case-by-case basis.  Contact support for assistance.
 
 ## 7. Intellectual Property
 
-All content, trademarks, and intellectual property in the App are owned by WeList or its licensors. You may not copy, modify, or distribute any content without permission.
+All content, trademarks, and intellectual property in the App are owned by ailist or its licensors. You may not copy, modify, or distribute any content without permission.
 
 ## 8. Privacy
 
@@ -69,7 +69,7 @@ Your use of the App is subject to our Privacy Policy, which describes how we col
 ## 9. Disclaimers
 
 ### 9.1 Service Quality
-WeList does not guarantee the quality, safety, or legality of services provided by Partners. 
+ailist does not guarantee the quality, safety, or legality of services provided by Partners. 
 
 ### 9.2 Availability
 We do not guarantee uninterrupted access to the App. 
@@ -79,11 +79,11 @@ We are not responsible for third-party content or services.
 
 ## 10. Limitation of Liability
 
-To the maximum extent permitted by law, WeList shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the App.
+To the maximum extent permitted by law, ailist shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the App.
 
 ## 11. Indemnification
 
-You agree to indemnify and hold harmless WeList from any claims, damages, or expenses arising from your use of the App or violation of these Terms.
+You agree to indemnify and hold harmless ailist from any claims, damages, or expenses arising from your use of the App or violation of these Terms.
 
 ## 12. Changes to Terms
 
@@ -96,9 +96,9 @@ These Terms are governed by the laws of India. Any disputes shall be resolved in
 ## 14. Contact
 
 For questions about these Terms, contact us at: 
-- Email: legal@welist.app
+- Email: legal@ailist.app
 - Address: Shillong, Meghalaya, India
 
 ---
 
-By using WeList, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. 
+By using ailist, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. 

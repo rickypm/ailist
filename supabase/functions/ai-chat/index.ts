@@ -9,7 +9,7 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const FREE_DAILY_LIMIT = 3
 
 // ✅ NEW: Only show partners with these subscription plans
-const SUBSCRIBED_PARTNER_PLANS = ['starter', 'business']
+const SUBSCRIBED_PARTNER_PLANS = ['free','starter', 'business']
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -76,7 +76,8 @@ serve(async (req) => {
       .from('professionals')
       .select('id, display_name, profession, description, city, area, services, rating, total_reviews, is_verified, experience_years, subscription_plan')
       .eq('is_available', true)
-      .in('subscription_plan', SUBSCRIBED_PARTNER_PLANS)  // ✅ Only subscribed partners
+      .ilike('city', `%${userCity}%`)
+      //.in('subscription_plan', SUBSCRIBED_PARTNER_PLANS)  // ✅ Only subscribed partners
       .order('rating', { ascending: false })
       .limit(50)
 
@@ -127,7 +128,7 @@ serve(async (req) => {
     // Premium user: OpenAI API call
     const professionalsContext = buildProfessionalsContext(allProfessionals || [])
     
-    const systemPrompt = 'You are WeList AI Assistant, helping users find local service professionals in ' + userCity + ', India.\n\n' +
+    const systemPrompt = 'You are AiList AI Assistant, helping users find local service professionals in ' + userCity + ', India.\n\n' +
       'AVAILABLE PROFESSIONALS:\n' + professionalsContext + '\n\n' +
       'INSTRUCTIONS:\n' +
       '1. Understand what the user needs\n' +

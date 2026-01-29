@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/theme.dart';
 import '../config/app_config.dart';
 import '../providers/auth_provider.dart';
 import '../providers/data_provider.dart';
+import '../services/cache_service.dart';
 import 'home/main_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -29,7 +31,7 @@ class _SplashScreenState extends State<SplashScreen>
   void _setupAnimations() {
     _controller = AnimationController(
       vsync: this,
-      duration:  const Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1500),
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -55,14 +57,30 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (!mounted) return;
 
-    // Load initial data (categories for the AI chat)
     final dataProvider = context.read<DataProvider>();
+    final authProvider = context.read<AuthProvider>();
+    
+    // Load categories
     await dataProvider.loadCategories();
+
+    // ✅ FIX: Check if user is already logged in (restore session)
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session != null) {
+      debugPrint('✅ Session found, restoring user...');
+      // User is already logged in, initialize their data
+      await dataProvider.initUser(session.user.id);
+      
+      // Restore city from user profile to cache
+      if (dataProvider.currentUser?.city != null) {
+        await CacheService.setString('user_city', dataProvider.currentUser!.city!);
+      }
+    } else {
+      debugPrint('ℹ️ No session found, user not logged in');
+    }
 
     if (!mounted) return;
 
-    // ZERO AUTH: Go directly to Main Screen (AI Chat)
-    // No login required! 
+    // Go to Main Screen
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => const MainScreen(),
@@ -92,19 +110,20 @@ class _SplashScreenState extends State<SplashScreen>
             animation: _controller,
             builder: (context, child) {
               return FadeTransition(
-                opacity:  _fadeAnimation,
-                child:  ScaleTransition(
+                opacity: _fadeAnimation,
+                child: ScaleTransition(
                   scale: _scaleAnimation,
                   child: Column(
-                    mainAxisAlignment:  MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       // Logo Text
                       Text(
                         AppConfig.appName,
                         style: AppTextStyles.logo.copyWith(
+                          color: AppColors.white,
                           shadows: [
                             Shadow(
-                              color: Colors.black.withValues(alpha: 0.3),
+                              color: Colors.black.withOpacity(0.3),
                               offset: const Offset(0, 4),
                               blurRadius: 12,
                             ),
@@ -118,7 +137,7 @@ class _SplashScreenState extends State<SplashScreen>
                         AppConfig.appTagline,
                         style: TextStyle(
                           fontSize: 16,
-                          color: AppColors.white.withValues(alpha: 0.9),
+                          color: AppColors.white.withOpacity(0.9),
                           fontWeight: FontWeight.w400,
                         ),
                       ),
@@ -126,12 +145,12 @@ class _SplashScreenState extends State<SplashScreen>
 
                       // Loading indicator
                       SizedBox(
-                        width:  40,
+                        width: 40,
                         height: 40,
                         child: CircularProgressIndicator(
                           strokeWidth: 3,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.white.withValues(alpha: 0.8),
+                            AppColors.white.withOpacity(0.8),
                           ),
                         ),
                       ),

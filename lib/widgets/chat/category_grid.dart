@@ -17,29 +17,8 @@ class CategoryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // If no categories are loaded yet, show the default ones (Electrician, Plumber, etc.)
-    if (categories.isEmpty) {
-      return _buildDefaultCategories();
-    }
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 16, // Increased spacing for better layout
-        childAspectRatio: 0.8, // Taller aspect ratio to fit text better
-      ),
-      itemCount: categories.length.clamp(0, 8),
-      itemBuilder: (context, index) {
-        final category = categories[index];
-        return _CategoryCard(
-          category: category,
-          onTap: () => onCategoryTap(category),
-        );
-      },
-    );
+    // ✅ Always show the colorful default categories
+    return _buildDefaultCategories();
   }
 
   Widget _buildDefaultCategories() {
@@ -83,6 +62,27 @@ class CategoryGrid extends StatelessWidget {
       },
     );
   }
+
+  Widget _buildDatabaseCategories() {
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 16,
+        childAspectRatio: 0.8,
+      ),
+      itemCount: categories.length.clamp(0, 8),
+      itemBuilder: (context, index) {
+        final category = categories[index];
+        return _CategoryCard(
+          category: category,
+          onTap: () => onCategoryTap(category),
+        );
+      },
+    );
+  }
 }
 
 class _DefaultCategory {
@@ -104,7 +104,6 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Smart mapping: Determine icon and color based on category name/iconName
     final iconData = _getSmartIcon(category.iconName, category.name);
     final colorData = _getSmartColor(category.iconName, category.name);
 
@@ -114,11 +113,11 @@ class _CategoryCard extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Container(
-            width: 56, // Slightly larger touch target
+            width: 56,
             height: 56,
             decoration: BoxDecoration(
               color: AppColors.surfaceNavy,
-              borderRadius: BorderRadius.circular(18), // Softer corners
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(
                 color: AppColors.borderNavy,
                 width: 1,
@@ -131,7 +130,7 @@ class _CategoryCard extends StatelessWidget {
                 ),
               ],
             ),
-            child: Center( // Ensure icon is perfectly centered
+            child: Center(
               child: Icon(
                 iconData,
                 color: colorData,
@@ -160,11 +159,9 @@ class _CategoryCard extends StatelessWidget {
     );
   }
 
-  // Helper to find the best icon based on name keywords
   IconData _getSmartIcon(String? iconName, String name) {
     final term = (iconName ?? name).toLowerCase();
 
-    // Construction & Home
     if (term.contains('electric')) return Icons.electrical_services;
     if (term.contains('plumb')) return Icons.plumbing;
     if (term.contains('carpenter') || term.contains('wood')) return Icons.handyman;
@@ -172,59 +169,41 @@ class _CategoryCard extends StatelessWidget {
     if (term.contains('clean') || term.contains('maid')) return Icons.cleaning_services;
     if (term.contains('pest') || term.contains('bug')) return Icons.bug_report;
     if (term.contains('garden') || term.contains('lawn')) return Icons.grass;
-    
-    // Automotive
     if (term.contains('mechanic') || term.contains('car') || term.contains('auto')) return Icons.car_repair;
     if (term.contains('bike')) return Icons.two_wheeler;
-    
-    // Professional Services
     if (term.contains('legal') || term.contains('law')) return Icons.gavel;
     if (term.contains('medical') || term.contains('doctor') || term.contains('health')) return Icons.medical_services;
     if (term.contains('tech') || term.contains('computer') || term.contains('it')) return Icons.computer;
     if (term.contains('photo') || term.contains('camera')) return Icons.camera_alt;
     if (term.contains('event') || term.contains('party') || term.contains('wedding')) return Icons.celebration;
     if (term.contains('cater') || term.contains('food') || term.contains('cook')) return Icons.restaurant;
-    
-    // Education & Beauty
     if (term.contains('tutor') || term.contains('teach') || term.contains('school')) return Icons.school;
     if (term.contains('beauty') || term.contains('salon') || term.contains('hair')) return Icons.face_retouching_natural;
     if (term.contains('makeup')) return Icons.brush;
 
-    // Default fallback
-    return Iconsax.category; 
+    return Iconsax.category;
   }
 
-  // Helper to find the best color based on name keywords
   Color _getSmartColor(String? iconName, String name) {
     final term = (iconName ?? name).toLowerCase();
 
-    // Yellows/Oranges
     if (term.contains('electric')) return const Color(0xFFFFB800);
     if (term.contains('pest')) return const Color(0xFFFF9800);
     if (term.contains('cater') || term.contains('food')) return const Color(0xFFFF5722);
-
-    // Blues
     if (term.contains('plumb')) return const Color(0xFF3B82F6);
     if (term.contains('clean')) return const Color(0xFF00BCD4);
     if (term.contains('tech') || term.contains('it')) return const Color(0xFF2196F3);
     if (term.contains('photo')) return const Color(0xFF03A9F4);
-
-    // Reds/Pinks
     if (term.contains('paint')) return const Color(0xFFE91E63);
     if (term.contains('beauty') || term.contains('salon')) return const Color(0xFFE040FB);
     if (term.contains('mechanic') || term.contains('car')) return const Color(0xFFF44336);
     if (term.contains('medical')) return const Color(0xFFEF5350);
-
-    // Greens
     if (term.contains('tutor') || term.contains('school')) return const Color(0xFF4CAF50);
     if (term.contains('garden')) return const Color(0xFF8BC34A);
-
-    // Purples/Others
     if (term.contains('event')) return const Color(0xFF9C27B0);
-    if (term.contains('legal')) return const Color(0xFFD4AF37); // Gold
-    if (term.contains('carpenter')) return const Color(0xFF8D6E63); // Brown
+    if (term.contains('legal')) return const Color(0xFFD4AF37);
+    if (term.contains('carpenter')) return const Color(0xFF8D6E63);
 
-    // Default fallback
     return AppColors.primary;
   }
 }

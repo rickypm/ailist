@@ -276,7 +276,7 @@ class MenuDrawer extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'WeList',
+                    'AiList',
                     style: TextStyle(
                       color: AppColors.white,
                       fontSize: 22,

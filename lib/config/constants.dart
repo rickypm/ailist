@@ -1,11 +1,11 @@
 class AppConstants {
   // App Info
-  static const String appName = 'WeList';
+  static const String appName = 'AiList';
   static const String appVersion = '1.0.0';
   static const String appBuildNumber = '1';
   
   // API Endpoints
-  static const String baseUrl = 'https://api.welist.app';
+  static const String baseUrl = 'https://api.ailist.app';
   static const String openAIEndpoint = 'https://api.openai.com/v1/chat/completions';
   
   // Storage Keys
