@@ -401,6 +401,17 @@ Future<void> initUser(String userId) async {
       _setLoading(false);
     }
   }
+// ============================================================
+  // Get by types
+  // ============================================================
+  Future<List<ItemModel>> getItemsByType(String type, {String? city}) async {
+  try {
+    return await _db.getItemsByType(type, city: city);
+  } catch (e) {
+    debugPrint('Error getting items by type: $e');
+    return [];
+  }
+}
 
   // ============================================================
   // ITEMS

@@ -7,7 +7,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/data_provider.dart';
 import '../../models/professional_model.dart';
 import '../../models/shop_model.dart';
-import '../../services/ai_service.dart';
+import '../../models/item_model.dart';
 import '../../widgets/chat/chat_message_widget.dart';
 import '../../widgets/chat/category_grid.dart';
 import '../../widgets/shop/shop_card.dart';
@@ -32,7 +32,18 @@ class _MainScreenState extends State<MainScreen> {
   int _selectedTabIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final List<String> _tabs = ['Services', 'Shops'];
+  // Updated tabs: Services, Shops, Rentals, Bookings
+  final List<Map<String, dynamic>> _tabs = [
+    {'label': 'Services', 'icon': Iconsax.briefcase, 'type': 'service'},
+    {'label': 'Shops', 'icon': Iconsax.shop, 'type': 'shop'},
+    {'label': 'Rentals', 'icon': Iconsax.calendar, 'type': 'rental'},
+    {'label': 'Bookings', 'icon': Iconsax.clock, 'type': 'booking'},
+  ];
+
+  // Store items for each tab
+  List<ItemModel> _rentalItems = [];
+  List<ItemModel> _bookingItems = [];
+  bool _loadingItems = false;
 
   @override
   void initState() {
@@ -54,13 +65,41 @@ class _MainScreenState extends State<MainScreen> {
 
   void _handleTabTap(int index) {
     setState(() => _selectedTabIndex = index);
-    
-    if (index == 1) {
-      // Shops tab - load shops
-      final dataProvider = context.read<DataProvider>();
-      final userCity = dataProvider.currentUser?.city ?? AppConfig.defaultCity;
-      dataProvider.searchShops('', city: userCity);
 
+    final dataProvider = context.read<DataProvider>();
+    final userCity = dataProvider.currentUser?.city ?? AppConfig.defaultCity;
+
+    switch (index) {
+      case 1: // Shops
+        dataProvider.searchShops('', city: userCity);
+        break;
+      case 2: // Rentals
+        _loadItemsByType('rental', userCity);
+        break;
+      case 3: // Bookings
+        _loadItemsByType('booking', userCity);
+        break;
+    }
+  }
+
+  Future<void> _loadItemsByType(String type, String city) async {
+    setState(() => _loadingItems = true);
+
+    final dataProvider = context.read<DataProvider>();
+
+    try {
+      final items = await dataProvider.getItemsByType(type, city: city);
+
+      setState(() {
+        if (type == 'rental') {
+          _rentalItems = items;
+        } else if (type == 'booking') {
+          _bookingItems = items;
+        }
+        _loadingItems = false;
+      });
+    } catch (e) {
+      setState(() => _loadingItems = false);
     }
   }
 
@@ -68,7 +107,6 @@ class _MainScreenState extends State<MainScreen> {
     final query = _inputController.text.trim();
     if (query.isEmpty) return;
 
-    // ✅ FIX: Switch to Services tab when sending a message
     setState(() => _selectedTabIndex = 0);
 
     final dataProvider = context.read<DataProvider>();
@@ -76,7 +114,6 @@ class _MainScreenState extends State<MainScreen> {
     _inputController.clear();
 
     final userCity = dataProvider.currentUser?.city ?? AppConfig.defaultCity;
-
 
     await dataProvider.sendAIMessage(
       message: query,
@@ -96,7 +133,6 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _navigateToProfessionalDetail(ProfessionalModel professional) {
-    debugPrint('🔍 Navigating to professional: ${professional.displayName}');
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -151,11 +187,7 @@ class _MainScreenState extends State<MainScreen> {
                 gradient: AppColors.inputBorderGradient,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Iconsax.login,
-                color: AppColors.white,
-                size: 32,
-              ),
+              child: const Icon(Iconsax.login, color: AppColors.white, size: 32),
             ),
             const SizedBox(height: 20),
             const Text(
@@ -168,12 +200,9 @@ class _MainScreenState extends State<MainScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Please sign in to access this feature, unlock contacts, and send messages.',
+              'Please sign in to access this feature.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                height: 1.5,
-              ),
+              style: TextStyle(color: AppColors.textSecondary, height: 1.5),
             ),
             const SizedBox(height: 24),
             SizedBox(
@@ -249,9 +278,7 @@ class _MainScreenState extends State<MainScreen> {
           children: [
             _buildHeader(),
             _buildTabSelector(),
-            Expanded(
-              child: _buildContent(),
-            ),
+            Expanded(child: _buildContent()),
             _buildBottomInput(),
           ],
         ),
@@ -263,7 +290,6 @@ class _MainScreenState extends State<MainScreen> {
   Widget _buildHeader() {
     final dataProvider = context.watch<DataProvider>();
     final userCity = dataProvider.currentUser?.city ?? AppConfig.defaultCity;
-    debugPrint('🏠 Header - currentUser: ${dataProvider.currentUser?.name}, city: ${dataProvider.currentUser?.city}, using: $userCity');
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
@@ -288,7 +314,7 @@ class _MainScreenState extends State<MainScreen> {
                   ),
                   const SizedBox(width: 8),
                   const Text(
-                    'AiList',  
+                    'AiList',
                     style: TextStyle(
                       color: AppColors.white,
                       fontSize: 24,
@@ -310,7 +336,7 @@ class _MainScreenState extends State<MainScreen> {
                     const SizedBox(width: 4),
                     Text(
                       userCity,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.white,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
@@ -339,31 +365,45 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildTabSelector() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 16, 16),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
       child: Row(
         children: List.generate(_tabs.length, (index) {
           final isSelected = _selectedTabIndex == index;
+          final tab = _tabs[index];
+
           return GestureDetector(
             onTap: () => _handleTabTap(index),
             child: Container(
-              margin: const EdgeInsets.only(right: 12),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              margin: const EdgeInsets.only(right: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.white : Colors.transparent,
+                color: isSelected ? AppColors.primary : AppColors.surfaceNavy,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: isSelected ? AppColors.white : AppColors.borderNavy,
+                  color: isSelected ? AppColors.primary : AppColors.borderNavy,
                   width: 1,
                 ),
               ),
-              child: Text(
-                _tabs[index],
-                style: TextStyle(
-                  color: isSelected ? AppColors.textDark : AppColors.white,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    tab['icon'] as IconData,
+                    size: 16,
+                    color: isSelected ? AppColors.white : AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    tab['label'] as String,
+                    style: TextStyle(
+                      color: isSelected ? AppColors.white : AppColors.textSecondary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
             ),
           );
@@ -372,71 +412,47 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  // ✅ FIX: Completely rewritten to properly handle tab switching
   Widget _buildContent() {
     return Consumer<DataProvider>(
       builder: (context, dataProvider, _) {
-        // ✅ FIX: If Shops tab is selected, ALWAYS show shops
-        if (_selectedTabIndex == 1) {
-          return _buildShopsContent(dataProvider);
+        switch (_selectedTabIndex) {
+          case 1: // Shops
+            return _buildShopsContent(dataProvider);
+          case 2: // Rentals
+            return _buildItemsContent(_rentalItems, 'rental');
+          case 3: // Bookings
+            return _buildItemsContent(_bookingItems, 'booking');
+          default: // Services (0)
+            final messages = dataProvider.chatMessages;
+            final matchedProfessionals = dataProvider.aiMatchedProfessionals;
+
+            if (messages.isEmpty) {
+              return _buildCategoriesContent(dataProvider);
+            }
+            return _buildChatContent(dataProvider, messages, matchedProfessionals);
         }
-        
-        // Services tab - show chat messages OR categories
-        final messages = dataProvider.chatMessages;
-        final matchedProfessionals = dataProvider.aiMatchedProfessionals;
-        
-        debugPrint('🔍 Building content - Messages: ${messages.length}, Professionals: ${matchedProfessionals.length}');
-        
-        // If no messages, show category grid
-        if (messages.isEmpty) {
-          return _buildCategoriesContent(dataProvider);
-        }
-        
-        // Show chat conversation
-        return _buildChatContent(dataProvider, messages, matchedProfessionals);
       },
     );
   }
 
-  // ✅ NEW: Separate method for shops content
   Widget _buildShopsContent(DataProvider dataProvider) {
     if (dataProvider.isLoading) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       );
     }
-    
+
     if (dataProvider.shops.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Iconsax.shop,
-              size: 64,
-              color: AppColors.textMuted.withOpacity(0.5),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'No shops found nearby',
-              style: TextStyle(
-                color: AppColors.textSecondary,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () {
-                final userCity = dataProvider.currentUser?.city ?? AppConfig.defaultCity;
-                dataProvider.searchShops('', city: userCity);
-              },
-              child: const Text('Refresh'),
-            ),
-          ],
-        ),
+      return _buildEmptyState(
+        icon: Iconsax.shop,
+        title: 'No shops found nearby',
+        onRefresh: () {
+          final userCity = dataProvider.currentUser?.city ?? AppConfig.defaultCity;
+          dataProvider.searchShops('', city: userCity);
+        },
       );
     }
-    
+
     return ListView.builder(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: dataProvider.shops.length,
@@ -450,7 +466,163 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  // ✅ NEW: Separate method for categories content
+  Widget _buildItemsContent(List<ItemModel> items, String type) {
+    if (_loadingItems) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+
+    if (items.isEmpty) {
+      final typeLabel = type == 'rental' ? 'rentals' : 'bookings';
+      return _buildEmptyState(
+        icon: type == 'rental' ? Iconsax.calendar : Iconsax.clock,
+        title: 'No $typeLabel found nearby',
+        onRefresh: () {
+          final dataProvider = context.read<DataProvider>();
+          final userCity = dataProvider.currentUser?.city ?? AppConfig.defaultCity;
+          _loadItemsByType(type, userCity);
+        },
+      );
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      itemCount: items.length,
+      itemBuilder: (context, index) {
+        final item = items[index];
+        return _buildItemCard(item);
+      },
+    );
+  }
+
+  Widget _buildItemCard(ItemModel item) {
+    final typeColor = _getTypeColor(item.priceType);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceNavy,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.borderNavy),
+      ),
+      child: Row(
+        children: [
+          // Image
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              color: AppColors.backgroundNavy,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: item.imageUrl != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Image.network(
+                      item.imageUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Icon(
+                        _getTypeIcon(item.priceType),
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  )
+                : Icon(_getTypeIcon(item.priceType), color: AppColors.textMuted),
+          ),
+          const SizedBox(width: 14),
+          // Details
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Type Badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: typeColor.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    _getTypeLabel(item.priceType),
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w600,
+                      color: typeColor,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  item.name,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 15,
+                    color: AppColors.white,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.priceDisplay,
+                  style: const TextStyle(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+                if (item.durationMinutes != null) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Iconsax.clock, size: 12, color: AppColors.textMuted),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${item.durationMinutes} min',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const Icon(Iconsax.arrow_right_3, size: 18, color: AppColors.textMuted),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState({
+    required IconData icon,
+    required String title,
+    required VoidCallback onRefresh,
+  }) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 64, color: AppColors.textMuted.withOpacity(0.5)),
+          const SizedBox(height: 16),
+          Text(
+            title,
+            style: const TextStyle(color: AppColors.textSecondary, fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: onRefresh,
+            child: const Text('Refresh'),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildCategoriesContent(DataProvider dataProvider) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -464,7 +636,6 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  // ✅ NEW: Separate method for chat content
   Widget _buildChatContent(
     DataProvider dataProvider,
     List<dynamic> messages,
@@ -475,7 +646,6 @@ class _MainScreenState extends State<MainScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: messages.length + (dataProvider.aiTyping ? 1 : 0),
       itemBuilder: (context, index) {
-        // Typing indicator
         if (index == messages.length && dataProvider.aiTyping) {
           return Container(
             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -484,40 +654,23 @@ class _MainScreenState extends State<MainScreen> {
                 SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppColors.primary,
-                  ),
+                  child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
                 ),
                 SizedBox(width: 12),
-                Text(
-                  'Searching...',
-                  style: TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 15,
-                  ),
-                ),
+                Text('Searching...', style: TextStyle(color: AppColors.textSecondary, fontSize: 15)),
               ],
             ),
           );
         }
-        
+
         final message = messages[index];
-        
-        // Check if this is the LAST assistant message
-        final isLastAssistantMessage = !message.isUser && 
-            index == messages.length - 1 && 
-            !dataProvider.aiTyping;
-        
-        // Only pass professionals to the last assistant message
+        final isLastAssistantMessage =
+            !message.isUser && index == messages.length - 1 && !dataProvider.aiTyping;
         final professionalsToShow = isLastAssistantMessage ? matchedProfessionals : null;
-        
+
         return ChatMessageWidget(
           message: message,
-          onProfessionalTap: (professional) {
-            debugPrint('🔍 Professional tapped: ${professional.displayName}');
-            _navigateToProfessionalDetail(professional);
-          },
+          onProfessionalTap: (professional) => _navigateToProfessionalDetail(professional),
           onShopTap: _navigateToShopDetail,
           professionals: professionalsToShow,
         );
@@ -554,11 +707,7 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
             IconButton(
-              icon: const Icon(
-                Iconsax.send_2, 
-                color: AppColors.primary, 
-                size: 24
-              ),
+              icon: const Icon(Iconsax.send_2, color: AppColors.primary, size: 24),
               onPressed: _handleSend,
             ),
           ],
@@ -579,24 +728,9 @@ class _MainScreenState extends State<MainScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(
-                index: 0,
-                icon: Iconsax.home,
-                activeIcon: Iconsax.home_1,
-                label: 'Home',
-              ),
-              _buildNavItem(
-                index: 1,
-                icon: Iconsax.message,
-                activeIcon: Iconsax.message,
-                label: 'Inbox',
-              ),
-              _buildNavItem(
-                index: 2,
-                icon: Iconsax.user,
-                activeIcon: Iconsax.user,
-                label: 'Profile',
-              ),
+              _buildNavItem(index: 0, icon: Iconsax.home, activeIcon: Iconsax.home_1, label: 'Home'),
+              _buildNavItem(index: 1, icon: Iconsax.message, activeIcon: Iconsax.message, label: 'Inbox'),
+              _buildNavItem(index: 2, icon: Iconsax.user, activeIcon: Iconsax.user, label: 'Profile'),
             ],
           ),
         ),
@@ -640,5 +774,56 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ),
     );
+  }
+
+  Color _getTypeColor(String? type) {
+    switch (type) {
+      case 'service':
+        return AppColors.primary;
+      case 'product':
+        return AppColors.success;
+      case 'rental':
+        return AppColors.info;
+      case 'booking':
+        return AppColors.warning;
+      case 'other':
+        return AppColors.accent;
+      default:
+        return AppColors.primary;
+    }
+  }
+
+  IconData _getTypeIcon(String? type) {
+    switch (type) {
+      case 'service':
+        return Iconsax.briefcase;
+      case 'product':
+        return Iconsax.box;
+      case 'rental':
+        return Iconsax.calendar;
+      case 'booking':
+        return Iconsax.clock;
+      case 'other':
+        return Iconsax.more;
+      default:
+        return Iconsax.box;
+    }
+  }
+
+  String _getTypeLabel(String? type) {
+    switch (type) {
+      case 'service':
+        return 'Service';
+      case 'product':
+        return 'Product';
+      case 'rental':
+        return 'Rental';
+      case 'booking':
+        return 'Booking';
+      case 'other':
+        return 'Other';
+      default:
+        return 'Service';
+    }
   }
 }

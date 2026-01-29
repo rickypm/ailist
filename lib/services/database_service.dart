@@ -7,6 +7,7 @@ import '../models/item_model.dart';
 import '../models/category_model.dart';
 import '../models/conversation_model.dart';
 import '../models/message_model.dart';
+import '../models/review_model.dart';
 
 class DatabaseService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -504,7 +505,159 @@ class DatabaseService {
       return null;
     }
   }
+// ============================================================
+// REVIEWS
+// ============================================================
 
+Future<List<ReviewModel>> getShopReviews(String shopId) async {
+  try {
+    final response = await _supabase
+        .from('reviews')
+        .select('*, users(name, avatar_url)')
+        .eq('shop_id', shopId)
+        .eq('is_visible', true)
+        .order('created_at', ascending: false);
+
+    return (response as List).map((e) => ReviewModel.fromJson(e)).toList();
+  } catch (e) {
+    debugPrint('Error getting shop reviews: $e');
+    return [];
+  }
+}
+
+Future<List<ReviewModel>> getProfessionalReviews(String professionalId) async {
+  try {
+    final response = await _supabase
+        .from('reviews')
+        .select('*, users(name, avatar_url)')
+        .eq('professional_id', professionalId)
+        .eq('is_visible', true)
+        .order('created_at', ascending: false);
+
+    return (response as List).map((e) => ReviewModel.fromJson(e)).toList();
+  } catch (e) {
+    debugPrint('Error getting professional reviews: $e');
+    return [];
+  }
+}
+
+Future<bool> createReview({
+  required String userId,
+  String? shopId,
+  String? professionalId,
+  required int rating,
+  String? comment,
+}) async {
+  try {
+    await _supabase.from('reviews').insert({
+      'user_id': userId,
+      'shop_id': shopId,
+      'professional_id': professionalId,
+      'rating': rating,
+      'comment': comment,
+    });
+
+    // Update shop/professional rating
+    if (shopId != null) {
+      await _updateShopRating(shopId);
+    }
+    if (professionalId != null) {
+      await _updateProfessionalRating(professionalId);
+    }
+
+    return true;
+  } catch (e) {
+    debugPrint('Error creating review: $e');
+    return false;
+  }
+}
+
+Future<void> _updateShopRating(String shopId) async {
+  try {
+    final response = await _supabase
+        .from('reviews')
+        .select('rating')
+        .eq('shop_id', shopId)
+        .eq('is_visible', true);
+
+    final reviews = response as List;
+    if (reviews.isEmpty) return;
+
+    final avgRating = reviews.map((r) => r['rating'] as int).reduce((a, b) => a + b) / reviews.length;
+
+    await _supabase.from('shops').update({
+      'rating': double.parse(avgRating.toStringAsFixed(1)),
+      'total_reviews': reviews.length,
+    }).eq('id', shopId);
+  } catch (e) {
+    debugPrint('Error updating shop rating: $e');
+  }
+}
+
+Future<void> _updateProfessionalRating(String professionalId) async {
+  try {
+    final response = await _supabase
+        .from('reviews')
+        .select('rating')
+        .eq('professional_id', professionalId)
+        .eq('is_visible', true);
+
+    final reviews = response as List;
+    if (reviews.isEmpty) return;
+
+    final avgRating = reviews.map((r) => r['rating'] as int).reduce((a, b) => a + b) / reviews.length;
+
+    await _supabase.from('professionals').update({
+      'rating': double.parse(avgRating.toStringAsFixed(1)),
+      'total_reviews': reviews.length,
+    }).eq('id', professionalId);
+  } catch (e) {
+    debugPrint('Error updating professional rating: $e');
+  }
+}
+
+Future<bool> hasUserReviewed(String userId, {String? shopId, String? professionalId}) async {
+  try {
+    var query = _supabase.from('reviews').select('id').eq('user_id', userId);
+
+    if (shopId != null) {
+      query = query.eq('shop_id', shopId);
+    }
+    if (professionalId != null) {
+      query = query.eq('professional_id', professionalId);
+    }
+
+    final response = await query.maybeSingle();
+    return response != null;
+  } catch (e) {
+    return false;
+  }
+}
+
+// ============================================================
+// ITEMS BY TYPE
+// ============================================================
+
+Future<List<ItemModel>> getItemsByType(String type, {String? city}) async {
+  try {
+    var query = _supabase
+        .from('items')
+        .select('*, shops!inner(city)')
+        .eq('price_type', type)
+        .eq('is_active', true);
+
+    if (city != null && city.isNotEmpty) {
+      query = query.ilike('shops.city', '%$city%');
+    }
+
+    final response = await query.order('created_at', ascending: false).limit(50);
+
+    return (response as List).map((e) => ItemModel.fromJson(e)).toList();
+  } catch (e) {
+    debugPrint('Error getting items by type: $e');
+    return [];
+  }
+}
   // ============================================================
   // SUBSCRIPTIONS & STATS
   // ============================================================

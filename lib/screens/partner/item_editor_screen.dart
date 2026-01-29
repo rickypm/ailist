@@ -42,39 +42,47 @@ class _ItemEditorScreenState extends State<ItemEditorScreen> {
   bool get _isEditing => widget.item != null;
 
   final List<Map<String, dynamic>> _listingTypes = [
-    {
-      'value': 'service',
-      'label': 'Service',
-      'icon': Iconsax.briefcase,
-      'color': AppColors.primary,
-      'hint': 'e.g., AC Repair, House Cleaning',
-      'priceHint': 'per service',
-    },
-    {
-      'value': 'product',
-      'label': 'Product',
-      'icon': Iconsax.box,
-      'color': AppColors.success,
-      'hint': 'e.g., Electronics, Furniture',
-      'priceHint': 'per item',
-    },
-    {
-      'value': 'rental',
-      'label': 'Rental',
-      'icon': Iconsax.calendar,
-      'color': AppColors.info,
-      'hint': 'e.g., Camera, Equipment',
-      'priceHint': 'per day/hour',
-    },
-    {
-      'value': 'booking',
-      'label': 'Booking',
-      'icon': Iconsax.clock,
-      'color': AppColors.warning,
-      'hint': 'e.g., Consultation, Appointment',
-      'priceHint': 'per session',
-    },
-  ];
+  {
+    'value': 'service',
+    'label': 'Service',
+    'icon': Iconsax.briefcase,
+    'color': AppColors.primary,
+    'hint': 'e.g., AC Repair, House Cleaning',
+    'priceHint': 'per service',
+  },
+  {
+    'value': 'product',
+    'label': 'Product',
+    'icon': Iconsax.box,
+    'color': AppColors.success,
+    'hint': 'e.g., Electronics, Furniture',
+    'priceHint': 'per item',
+  },
+  {
+    'value': 'rental',
+    'label': 'Rental',
+    'icon': Iconsax.calendar,
+    'color': AppColors.info,
+    'hint': 'e.g., Camera, Equipment, Cars',
+    'priceHint': 'per day/hour',
+  },
+  {
+    'value': 'booking',
+    'label': 'Booking',
+    'icon': Iconsax.clock,
+    'color': AppColors.warning,
+    'hint': 'e.g., Hotels, Rooms, Appointments',
+    'priceHint': 'per night/session',
+  },
+  {
+    'value': 'other',
+    'label': 'Other',
+    'icon': Iconsax.more,
+    'color': AppColors.accent,
+    'hint': 'e.g., Real Estate, Custom listings',
+    'priceHint': 'custom',
+  },
+];
 
   @override
   void initState() {

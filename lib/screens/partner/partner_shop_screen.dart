@@ -538,116 +538,133 @@ class _PartnerShopScreenState extends State<PartnerShopScreen> {
   }
 
   void _showAddListingSheet(String shopId) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFFF5F6FA),
-      isScrollControlled: true, // ✅ Fix overflow
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.55, // ✅ Better size
-        minChildSize: 0.4,
-        maxChildSize: 0.7,
-        expand: false,
-        builder: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Handle
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFDDE2EE),
-                    borderRadius: BorderRadius.circular(2),
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: const Color(0xFFF5F6FA),
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) => DraggableScrollableSheet(
+      initialChildSize: 0.65, // ✅ Increased to fit 5 items
+      minChildSize: 0.5,
+      maxChildSize: 0.8,
+      expand: false,
+      builder: (context, scrollController) => SingleChildScrollView(
+        controller: scrollController,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDDE2EE),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'What would you like to add?',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 20),
+            _buildListingTypeOption(
+              icon: Iconsax.briefcase,
+              title: 'Service',
+              subtitle: 'e.g., AC Repair, Plumbing',
+              color: AppColors.primary,
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ItemEditorScreen(shopId: shopId, initialType: 'service'),
                   ),
-                ),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'What would you like to add?',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 20),
-              _buildListingTypeOption(
-                icon: Iconsax.briefcase,
-                title: 'Service',
-                subtitle: 'e.g., AC Repair, Plumbing',
-                color: AppColors.primary,
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ItemEditorScreen(shopId: shopId, initialType: 'service'),
-                    ),
-                  ).then((_) => _loadData());
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildListingTypeOption(
-                icon: Iconsax.box,
-                title: 'Product',
-                subtitle: 'Sell a physical product',
-                color: AppColors.success,
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ItemEditorScreen(shopId: shopId, initialType: 'product'),
-                    ),
-                  ).then((_) => _loadData());
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildListingTypeOption(
-                icon: Iconsax.calendar,
-                title: 'Rental',
-                subtitle: 'Rent out equipment',
-                color: AppColors.info,
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ItemEditorScreen(shopId: shopId, initialType: 'rental'),
-                    ),
-                  ).then((_) => _loadData());
-                },
-              ),
-              const SizedBox(height: 12),
-              _buildListingTypeOption(
-                icon: Iconsax.clock,
-                title: 'Booking',
-                subtitle: 'Time-based appointments',
-                color: AppColors.warning,
-                onTap: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => ItemEditorScreen(shopId: shopId, initialType: 'booking'),
-                    ),
-                  ).then((_) => _loadData());
-                },
-              ),
-              const SizedBox(height: 24),
-            ],
-          ),
+                ).then((_) => _loadData());
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildListingTypeOption(
+              icon: Iconsax.box,
+              title: 'Product',
+              subtitle: 'Sell a physical product',
+              color: AppColors.success,
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ItemEditorScreen(shopId: shopId, initialType: 'product'),
+                  ),
+                ).then((_) => _loadData());
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildListingTypeOption(
+              icon: Iconsax.calendar,
+              title: 'Rental',
+              subtitle: 'Rent out equipment',
+              color: AppColors.info,
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ItemEditorScreen(shopId: shopId, initialType: 'rental'),
+                  ),
+                ).then((_) => _loadData());
+              },
+            ),
+            const SizedBox(height: 12),
+            _buildListingTypeOption(
+              icon: Iconsax.clock,
+              title: 'Booking',
+              subtitle: 'Time-based appointments',
+              color: AppColors.warning,
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ItemEditorScreen(shopId: shopId, initialType: 'booking'),
+                  ),
+                ).then((_) => _loadData());
+              },
+            ),
+            const SizedBox(height: 12),
+            // ✅ ADD THIS - Other option
+            _buildListingTypeOption(
+              icon: Iconsax.more,
+              title: 'Other',
+              subtitle: 'Real Estate, Custom listings',
+              color: AppColors.accent,
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => ItemEditorScreen(shopId: shopId, initialType: 'other'),
+                  ),
+                ).then((_) => _loadData());
+              },
+            ),
+            const SizedBox(height: 24),
+          ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildListingTypeOption({
     required IconData icon,
@@ -716,8 +733,11 @@ class _PartnerShopScreenState extends State<PartnerShopScreen> {
         return AppColors.info;
       case 'booking':
         return AppColors.warning;
+      case 'other':
+        return AppColors.accent;
       default:
         return AppColors.primary;
+        
     }
   }
 
@@ -731,6 +751,8 @@ class _PartnerShopScreenState extends State<PartnerShopScreen> {
         return 'Rental';
       case 'booking':
         return 'Booking';
+      case 'other':
+        return 'Other';
       default:
         return 'Service';
     }
