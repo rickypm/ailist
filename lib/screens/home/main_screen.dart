@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:iconsax/iconsax.dart';
@@ -12,6 +13,7 @@ import '../../widgets/chat/chat_message_widget.dart';
 import '../../widgets/chat/category_grid.dart';
 import '../../widgets/shop/shop_card.dart';
 import '../../widgets/common/menu_drawer.dart';
+import '../../widgets/common/animated_gradient_border.dart';
 import '../messages/inbox_screen.dart';
 import '../services/professional_detail_screen.dart';
 import '../profile/profile_screen.dart';
@@ -28,11 +30,12 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   final _inputController = TextEditingController();
   final _scrollController = ScrollController();
+  final _inputFocusNode = FocusNode();
   int _selectedNavIndex = 0;
   int _selectedTabIndex = 0;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  // Updated tabs: Services, Shops, Rentals, Bookings
+  // Tabs
   final List<Map<String, dynamic>> _tabs = [
     {'label': 'Services', 'icon': Iconsax.briefcase, 'type': 'service'},
     {'label': 'Shops', 'icon': Iconsax.shop, 'type': 'shop'},
@@ -40,15 +43,62 @@ class _MainScreenState extends State<MainScreen> {
     {'label': 'Bookings', 'icon': Iconsax.clock, 'type': 'booking'},
   ];
 
-  // Store items for each tab
+  // Items for tabs
   List<ItemModel> _rentalItems = [];
   List<ItemModel> _bookingItems = [];
   bool _loadingItems = false;
+
+  // Animated placeholder
+  int _placeholderIndex = 0;
+  Timer? _placeholderTimer;
+  bool _showPlaceholder = true; // Controls placeholder visibility
+  final List<String> _placeholders = [
+    'Ask anything...',
+    'Looking for a service?',
+    'Find a place nearby...',
+    'Want to rent something?',
+    'Need a professional?',
+  ];
 
   @override
   void initState() {
     super.initState();
     _loadInitialData();
+    _startPlaceholderAnimation();
+
+    // Listen to focus changes
+    _inputFocusNode.addListener(_onFocusChanged);
+  }
+
+  void _onFocusChanged() {
+    setState(() {
+      // Hide placeholder when focused, show when unfocused AND text is empty
+      if (_inputFocusNode.hasFocus) {
+        _showPlaceholder = false;
+        _stopPlaceholderAnimation();
+      } else {
+        if (_inputController.text.isEmpty) {
+          _showPlaceholder = true;
+          _startPlaceholderAnimation();
+        }
+      }
+    });
+  }
+
+  void _startPlaceholderAnimation() {
+    _placeholderTimer?.cancel();
+    _placeholderTimer = Timer.periodic(const Duration(seconds: 2), (timer) {
+      if (mounted && _showPlaceholder) {
+        setState(() {
+          _placeholderIndex = (_placeholderIndex + 1) % _placeholders.length;
+        });
+      }
+    });
+  }
+
+  void _stopPlaceholderAnimation() {
+    _placeholderTimer?.cancel();
+    _placeholderTimer = null;
   }
 
   Future<void> _loadInitialData() async {
@@ -60,6 +110,9 @@ class _MainScreenState extends State<MainScreen> {
   void dispose() {
     _inputController.dispose();
     _scrollController.dispose();
+    _inputFocusNode.removeListener(_onFocusChanged);
+    _inputFocusNode.dispose();
+    _placeholderTimer?.cancel();
     super.dispose();
   }
 
@@ -70,13 +123,13 @@ class _MainScreenState extends State<MainScreen> {
     final userCity = dataProvider.currentUser?.city ?? AppConfig.defaultCity;
 
     switch (index) {
-      case 1: // Shops
+      case 1:
         dataProvider.searchShops('', city: userCity);
         break;
-      case 2: // Rentals
+      case 2:
         _loadItemsByType('rental', userCity);
         break;
-      case 3: // Bookings
+      case 3:
         _loadItemsByType('booking', userCity);
         break;
     }
@@ -112,6 +165,13 @@ class _MainScreenState extends State<MainScreen> {
     final dataProvider = context.read<DataProvider>();
     final authProvider = context.read<AuthProvider>();
     _inputController.clear();
+
+    // Unfocus and show placeholder again
+    _inputFocusNode.unfocus();
+    setState(() {
+      _showPlaceholder = true;
+    });
+    _startPlaceholderAnimation();
 
     final userCity = dataProvider.currentUser?.city ?? AppConfig.defaultCity;
 
@@ -416,13 +476,13 @@ class _MainScreenState extends State<MainScreen> {
     return Consumer<DataProvider>(
       builder: (context, dataProvider, _) {
         switch (_selectedTabIndex) {
-          case 1: // Shops
+          case 1:
             return _buildShopsContent(dataProvider);
-          case 2: // Rentals
+          case 2:
             return _buildItemsContent(_rentalItems, 'rental');
-          case 3: // Bookings
+          case 3:
             return _buildItemsContent(_bookingItems, 'booking');
-          default: // Services (0)
+          default:
             final messages = dataProvider.chatMessages;
             final matchedProfessionals = dataProvider.aiMatchedProfessionals;
 
@@ -509,7 +569,6 @@ class _MainScreenState extends State<MainScreen> {
       ),
       child: Row(
         children: [
-          // Image
           Container(
             width: 80,
             height: 80,
@@ -532,12 +591,10 @@ class _MainScreenState extends State<MainScreen> {
                 : Icon(_getTypeIcon(item.priceType), color: AppColors.textMuted),
           ),
           const SizedBox(width: 14),
-          // Details
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Type Badge
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
@@ -581,10 +638,7 @@ class _MainScreenState extends State<MainScreen> {
                       const SizedBox(width: 4),
                       Text(
                         '${item.durationMinutes} min',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textMuted,
-                        ),
+                        style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
                       ),
                     ],
                   ),
@@ -609,15 +663,9 @@ class _MainScreenState extends State<MainScreen> {
         children: [
           Icon(icon, size: 64, color: AppColors.textMuted.withOpacity(0.5)),
           const SizedBox(height: 16),
-          Text(
-            title,
-            style: const TextStyle(color: AppColors.textSecondary, fontSize: 16),
-          ),
+          Text(title, style: const TextStyle(color: AppColors.textSecondary, fontSize: 16)),
           const SizedBox(height: 8),
-          TextButton(
-            onPressed: onRefresh,
-            child: const Text('Refresh'),
-          ),
+          TextButton(onPressed: onRefresh, child: const Text('Refresh')),
         ],
       ),
     );
@@ -679,43 +727,124 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildBottomInput() {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      decoration: const BoxDecoration(
-        color: AppColors.surfaceNavy,
-        border: Border(top: BorderSide(color: AppColors.borderNavy)),
-      ),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-        decoration: BoxDecoration(
-          color: const Color(0xFF151E32),
-          borderRadius: BorderRadius.circular(30),
-        ),
+  const double borderRadius = 30;
+  const double borderWidth = 2.5;
+
+  return Container(
+    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+    color: AppColors.backgroundNavy,
+    child: SimpleGradientBorder(
+      borderRadius: borderRadius,
+      borderWidth: borderWidth,
+      innerColor: const Color(0xFF1A2235),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
         child: Row(
           children: [
+            // Text input area with animated placeholder
             Expanded(
-              child: TextField(
-                controller: _inputController,
-                style: const TextStyle(color: AppColors.white, fontSize: 14),
-                decoration: const InputDecoration(
-                  hintText: 'Ask anything...',
-                  hintStyle: TextStyle(color: AppColors.textHint),
-                  border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              child: SizedBox(
+                height: 44,
+                child: Stack(
+                  alignment: Alignment.centerLeft,
+                  children: [
+                    // ✅ Animated placeholder text
+                    if (_showPlaceholder && _inputController.text.isEmpty)
+                      IgnorePointer(  // ✅ Added: Allows taps to pass through to TextField
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 16),
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 500),
+                            transitionBuilder: (child, animation) {
+                              return FadeTransition(
+                                opacity: animation,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(0, 0.8),
+                                    end: Offset.zero,
+                                  ).animate(CurvedAnimation(
+                                    parent: animation,
+                                    curve: Curves.easeOutCubic,
+                                  )),
+                                  child: child,
+                                ),
+                              );
+                            },
+                            child: Text(
+                              _placeholders[_placeholderIndex],
+                              key: ValueKey<int>(_placeholderIndex),
+                              style: const TextStyle(
+                                color: Color(0xFF8B92A8),  // ✅ Better contrast color
+                                fontSize: 15,
+                                fontWeight: FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    // TextField
+                    TextField(
+                      controller: _inputController,
+                      focusNode: _inputFocusNode,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                      ),
+                      cursorColor: const Color(0xFF8B5CF6),
+                      decoration: const InputDecoration(
+                        hintText: '',
+                        border: InputBorder.none,
+                        filled: false,  // ✅ Added: Ensure no background fill
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
+                        isDense: true,
+                      ),
+                      onSubmitted: (_) => _handleSend(),
+                      onChanged: (_) {  // ✅ Added: Update placeholder visibility on text change
+                        setState(() {
+                          _showPlaceholder = _inputController.text.isEmpty && !_inputFocusNode.hasFocus;
+                        });
+                      },
+                    ),
+                  ],
                 ),
-                onSubmitted: (_) => _handleSend(),
               ),
             ),
-            IconButton(
-              icon: const Icon(Iconsax.send_2, color: AppColors.primary, size: 24),
-              onPressed: _handleSend,
+            // Send button
+            Container(
+              margin: const EdgeInsets.only(right: 4),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF6366F1), Color(0xFF8B5CF6)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(22),
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _handleSend,
+                  borderRadius: BorderRadius.circular(22),
+                  child: const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Icon(
+                      Iconsax.send_2,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ],
         ),
       ),
-    );
-  }
-
+    ),
+  );
+}
   Widget _buildBottomNav() {
     return Container(
       decoration: const BoxDecoration(
