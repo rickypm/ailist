@@ -729,6 +729,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget _buildBottomInput() {
   const double borderRadius = 30;
   const double borderWidth = 2.5;
+  const double innerRadius = borderRadius - borderWidth;
 
   return Container(
     padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
@@ -737,8 +738,8 @@ class _MainScreenState extends State<MainScreen> {
       borderRadius: borderRadius,
       borderWidth: borderWidth,
       innerColor: const Color(0xFF1A2235),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(innerRadius),
         child: Row(
           children: [
             // Text input area with animated placeholder
