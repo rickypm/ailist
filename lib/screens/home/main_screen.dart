@@ -16,6 +16,7 @@ import '../messages/inbox_screen.dart';
 import '../services/professional_detail_screen.dart';
 import '../profile/profile_screen.dart';
 import '../auth/login_screen.dart';
+import '../shops/shop_detail_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -57,9 +58,9 @@ class _MainScreenState extends State<MainScreen> {
     if (index == 1) {
       // Shops tab - load shops
       final dataProvider = context.read<DataProvider>();
-      if (dataProvider.shops.isEmpty) {
-        dataProvider.searchShops('', city: AppConfig.defaultCity);
-      }
+      final userCity = dataProvider.currentUser?.city ?? AppConfig.defaultCity;
+      dataProvider.searchShops('', city: userCity);
+
     }
   }
 
@@ -71,12 +72,16 @@ class _MainScreenState extends State<MainScreen> {
     setState(() => _selectedTabIndex = 0);
 
     final dataProvider = context.read<DataProvider>();
+    final authProvider = context.read<AuthProvider>();
     _inputController.clear();
+
+    final userCity = dataProvider.currentUser?.city ?? AppConfig.defaultCity;
+
 
     await dataProvider.sendAIMessage(
       message: query,
-      userId: null,
-      city: AppConfig.defaultCity,
+      userId: authProvider.user?.id,
+      city: userCity,
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -101,8 +106,11 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _navigateToShopDetail(ShopModel shop) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Opening ${shop.name}...')),
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ShopDetailScreen(shop: shop),
+      ),
     );
   }
 
@@ -255,6 +263,8 @@ class _MainScreenState extends State<MainScreen> {
   Widget _buildHeader() {
     final dataProvider = context.watch<DataProvider>();
     final userCity = dataProvider.currentUser?.city ?? AppConfig.defaultCity;
+    debugPrint('🏠 Header - currentUser: ${dataProvider.currentUser?.name}, city: ${dataProvider.currentUser?.city}, using: $userCity');
+
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       child: Column(
@@ -417,7 +427,8 @@ class _MainScreenState extends State<MainScreen> {
             const SizedBox(height: 8),
             TextButton(
               onPressed: () {
-                dataProvider.searchShops('', city: AppConfig.defaultCity);
+                final userCity = dataProvider.currentUser?.city ?? AppConfig.defaultCity;
+                dataProvider.searchShops('', city: userCity);
               },
               child: const Text('Refresh'),
             ),
