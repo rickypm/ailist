@@ -4,13 +4,12 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-// ✅ Handle background messages (must be top-level function)
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp();
   debugPrint('📩 Background message: ${message.messageId}');
-  debugPrint('📩 Title: ${message.notification?.title}');
-  debugPrint('📩 Body: ${message.notification?.body}');
 }
 
 class PushNotificationService {
@@ -24,45 +23,38 @@ class PushNotificationService {
   String? _deviceToken;
   String? get deviceToken => _deviceToken;
 
-  // Callback for handling notification taps
   Function(Map<String, dynamic>)? onNotificationTap;
-
-  // ============================================================
-  // INITIALIZE
-  // ============================================================
 
   Future<void> initialize() async {
     try {
       debugPrint('🔔 Initializing push notifications...');
 
-      // Set background message handler
       FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 
-      // Request permission
       await _requestPermission();
+      
+      // ✅ Get fresh token
+      await _getAndPrintFullToken();
 
-      // Get device token
-      await _getToken();
-
-      // Listen for token refresh
       _messaging.onTokenRefresh.listen((newToken) {
         debugPrint('🔄 FCM Token refreshed');
         _deviceToken = newToken;
         _saveTokenToDatabase(newToken);
       });
 
-      // Handle foreground messages
       FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
-
-      // Handle notification tap when app is in background
       FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
 
-      // Check if app was opened from notification (terminated state)
       final initialMessage = await _messaging.getInitialMessage();
       if (initialMessage != null) {
-        debugPrint('📩 App opened from terminated state via notification');
         _handleNotificationTap(initialMessage);
       }
+
+      await _messaging.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
 
       debugPrint('✅ Push notifications initialized successfully');
     } catch (e) {
@@ -70,62 +62,58 @@ class PushNotificationService {
     }
   }
 
-  // ============================================================
-  // REQUEST PERMISSION
-  // ============================================================
-
   Future<bool> _requestPermission() async {
     try {
       final settings = await _messaging.requestPermission(
         alert: true,
-        announcement: false,
         badge: true,
-        carPlay: false,
-        criticalAlert: false,
-        provisional: false,
         sound: true,
       );
 
-      debugPrint('🔔 Permission status: ${settings.authorizationStatus}');
-
-      if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-        debugPrint('✅ User granted full permission');
-        return true;
-      } else if (settings.authorizationStatus == AuthorizationStatus.provisional) {
-        debugPrint('⚠️ User granted provisional permission');
-        return true;
-      } else {
-        debugPrint('❌ User declined permission');
-        return false;
-      }
+      debugPrint('🔔 Permission: ${settings.authorizationStatus}');
+      return settings.authorizationStatus == AuthorizationStatus.authorized;
     } catch (e) {
-      debugPrint('❌ Error requesting permission: $e');
+      debugPrint('❌ Permission error: $e');
       return false;
     }
   }
 
-  // ============================================================
-  // GET TOKEN
-  // ============================================================
-
-  Future<String?> _getToken() async {
+  // ✅ Get and print full token
+  Future<String?> _getAndPrintFullToken() async {
     try {
       _deviceToken = await _messaging.getToken();
-      debugPrint('📱 FCM Token: ${_deviceToken?.substring(0, 50)}...');
+
+      if (_deviceToken != null) {
+        debugPrint('');
+        debugPrint('╔═══════════════════════════════════════════════════════════╗');
+        debugPrint('║ ��� FCM DEVICE TOKEN                                       ║');
+        debugPrint('╠═══════════════════════════════════════════════════════════╣');
+        debugPrint('║ Length: ${_deviceToken!.length} characters');
+        debugPrint('╠═══════════════════════════════════════════════════════════╣');
+        
+        // Print in chunks to avoid truncation
+        final token = _deviceToken!;
+        final chunkSize = 60;
+        for (var i = 0; i < token.length; i += chunkSize) {
+          final end = (i + chunkSize < token.length) ? i + chunkSize : token.length;
+          debugPrint('║ ${token.substring(i, end)}');
+        }
+        
+        debugPrint('╚═══════════════════════════════════════════════════════════╝');
+        debugPrint('');
+      }
+
       return _deviceToken;
     } catch (e) {
-      debugPrint('❌ Error getting FCM token: $e');
+      debugPrint('❌ Error getting token: $e');
       return null;
     }
   }
 
-  // ============================================================
-  // REGISTER DEVICE
-  // ============================================================
-
+  // ✅ Register device with full token
   Future<void> registerDevice(String userId) async {
     if (_deviceToken == null) {
-      await _getToken();
+      await _getAndPrintFullToken();
     }
 
     if (_deviceToken == null) {
@@ -133,49 +121,60 @@ class PushNotificationService {
       return;
     }
 
+    debugPrint('📤 Registering device for user: $userId');
+    debugPrint('📤 Token length: ${_deviceToken!.length}');
+
     await _saveTokenToDatabase(_deviceToken!, userId: userId);
   }
 
+  // ✅ Save full token to database
   Future<void> _saveTokenToDatabase(String token, {String? userId}) async {
     try {
       final uid = userId ?? _supabase.auth.currentUser?.id;
       if (uid == null) {
-        debugPrint('⚠️ No user logged in, skipping token save');
+        debugPrint('⚠️ No user logged in');
         return;
       }
 
-      final platform = _getPlatform();
-      debugPrint('📱 Saving device token for platform: $platform');
+      final platform = Platform.isAndroid ? 'android' : (Platform.isIOS ? 'ios' : 'unknown');
 
-      await _supabase.from('user_devices').upsert(
-        {
-          'user_id': uid,
-          'device_token': token,
-          'platform': platform,
-          'is_active': true,
-          'last_used_at': DateTime.now().toIso8601String(),
-          'device_info': {
-            'registered_at': DateTime.now().toIso8601String(),
-          },
-        },
-        onConflict: 'user_id,device_token',
-      );
+      debugPrint('💾 Saving to Supabase...');
+      debugPrint('💾 User ID: $uid');
+      debugPrint('💾 Platform: $platform');
+      debugPrint('💾 Token length: ${token.length}');
 
-      debugPrint('✅ Device token saved to database');
+      // Delete old tokens for this user first (optional - clean up)
+      await _supabase
+          .from('user_devices')
+          .delete()
+          .eq('user_id', uid)
+          .eq('platform', platform);
+
+      // Insert fresh token
+      await _supabase.from('user_devices').insert({
+        'user_id': uid,
+        'device_token': token,
+        'platform': platform,
+        'is_active': true,
+        'last_used_at': DateTime.now().toIso8601String(),
+      });
+
+      debugPrint('✅ Device token saved to Supabase!');
+      
+      // Verify it was saved
+      final verify = await _supabase
+          .from('user_devices')
+          .select('id, device_token')
+          .eq('user_id', uid)
+          .eq('platform', platform)
+          .single();
+      
+      debugPrint('✅ Verified in DB - Token length: ${verify['device_token'].toString().length}');
+
     } catch (e) {
-      debugPrint('❌ Error saving device token: $e');
+      debugPrint('❌ Error saving token: $e');
     }
   }
-
-  String _getPlatform() {
-    if (Platform.isAndroid) return 'android';
-    if (Platform.isIOS) return 'ios';
-    return 'unknown';
-  }
-
-  // ============================================================
-  // UNREGISTER DEVICE
-  // ============================================================
 
   Future<void> unregisterDevice(String userId) async {
     if (_deviceToken == null) return;
@@ -189,86 +188,67 @@ class PushNotificationService {
 
       debugPrint('✅ Device unregistered');
     } catch (e) {
-      debugPrint('❌ Error unregistering device: $e');
+      debugPrint('❌ Error unregistering: $e');
     }
   }
-
-  // ============================================================
-  // HANDLE FOREGROUND MESSAGE
-  // ============================================================
 
   void _handleForegroundMessage(RemoteMessage message) {
-    debugPrint('📩 ========== FOREGROUND MESSAGE ==========');
-    debugPrint('📩 Message ID: ${message.messageId}');
+    debugPrint('📩 FOREGROUND MESSAGE:');
     debugPrint('📩 Title: ${message.notification?.title}');
     debugPrint('📩 Body: ${message.notification?.body}');
-    debugPrint('📩 Data: ${message.data}');
-    debugPrint('📩 ==========================================');
 
-    // You can show a local notification or in-app snackbar here
-    // For now, the notification will show automatically on Android
+    _showInAppNotification(
+      title: message.notification?.title ?? 'Notification',
+      body: message.notification?.body ?? '',
+      data: message.data,
+    );
   }
 
-  // ============================================================
-  // HANDLE NOTIFICATION TAP
-  // ============================================================
+  void _showInAppNotification({
+    required String title,
+    required String body,
+    Map<String, dynamic>? data,
+  }) {
+    final context = navigatorKey.currentContext;
+    if (context == null) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1E293B),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Row(
+          children: [
+            const Icon(Icons.notifications, color: Color(0xFF6366F1)),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(title, style: const TextStyle(color: Colors.white, fontSize: 18)),
+            ),
+          ],
+        ),
+        content: Text(body, style: const TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _handleNotificationTap(RemoteMessage message) {
-    debugPrint('👆 ========== NOTIFICATION TAPPED ==========');
-    debugPrint('👆 Message ID: ${message.messageId}');
-    debugPrint('👆 Data: ${message.data}');
-    debugPrint('👆 ==========================================');
-
-    // Call the callback if set
-    if (onNotificationTap != null) {
-      onNotificationTap!(message.data);
-    }
-
-    // Handle navigation based on action
-    final actionType = message.data['action_type'];
-    final actionData = message.data['action_data'];
-
-    if (actionType == 'open_screen' && actionData != null) {
-      debugPrint('📱 Should navigate to: $actionData');
-      // Navigation will be handled by the callback
-    }
+    debugPrint('👆 Notification tapped: ${message.data}');
+    onNotificationTap?.call(message.data);
   }
-
-  // ============================================================
-  // SUBSCRIBE TO TOPICS
-  // ============================================================
 
   Future<void> subscribeToTopic(String topic) async {
-    try {
-      await _messaging.subscribeToTopic(topic);
-      debugPrint('✅ Subscribed to topic: $topic');
-    } catch (e) {
-      debugPrint('❌ Error subscribing to topic: $e');
-    }
+    await _messaging.subscribeToTopic(topic);
+    debugPrint('✅ Subscribed to: $topic');
   }
-
-  Future<void> unsubscribeFromTopic(String topic) async {
-    try {
-      await _messaging.unsubscribeFromTopic(topic);
-      debugPrint('✅ Unsubscribed from topic: $topic');
-    } catch (e) {
-      debugPrint('❌ Error unsubscribing from topic: $e');
-    }
-  }
-
-  // ============================================================
-  // SUBSCRIBE USER TO DEFAULT TOPICS
-  // ============================================================
 
   Future<void> subscribeToUserTopics(String userRole) async {
-    // Subscribe to general announcements
     await subscribeToTopic('all_users');
-    
-    // Subscribe based on role
-    if (userRole == 'partner' || userRole == 'professional') {
-      await subscribeToTopic('partners');
-    } else {
-      await subscribeToTopic('users');
-    }
+    await subscribeToTopic(userRole == 'partner' ? 'partners' : 'users');
   }
 }
