@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "584415460047",
+    "project_id": "ailist-98784",
+    "storage_bucket": "ailist-98784.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:584415460047:android:cb832423e4379fe78a95ba",
+        "android_client_info": {
+          "package_name": "com.example.ailist"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPnKuaR8OY_MWacxt5P9RlyYRmboUNog0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

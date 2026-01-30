@@ -3,10 +3,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 import '../services/auth_service.dart';
 import '../services/cache_service.dart';
+import '../services/push_notification_service.dart';
 
 class AuthProvider extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final _supabase = Supabase.instance.client;
+  final _pushService = PushNotificationService();
 
   UserModel? _user;
   bool _isLoading = true;
@@ -27,6 +29,8 @@ class AuthProvider extends ChangeNotifier {
     _authService.authStateChanges.listen((data) async {
       if (data.session?.user != null) {
         await _loadUserProfile(data.session!.user.id);
+        // ✅ Register device for push notifications on auth state change
+        await _registerDeviceForPush();
       } else {
         _user = null;
         _isLoading = false;
@@ -37,6 +41,18 @@ class AuthProvider extends ChangeNotifier {
     final currentUser = _authService.currentUser;
     if (currentUser != null) {
       _loadUserProfile(currentUser.id);
+    } else {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // ✅ Initialize auth (call from main.dart)
+  Future<void> initialize() async {
+    final currentUser = _authService.currentUser;
+    if (currentUser != null) {
+      await _loadUserProfile(currentUser.id);
+      await _registerDeviceForPush();
     } else {
       _isLoading = false;
       notifyListeners();
@@ -59,6 +75,18 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ✅ Register device for push notifications
+  Future<void> _registerDeviceForPush() async {
+    if (_user != null) {
+      try {
+        await _pushService.registerDevice(_user!.id);
+        debugPrint('✅ Device registered for push notifications');
+      } catch (e) {
+        debugPrint('⚠️ Failed to register device for push: $e');
+      }
+    }
+  }
+
   Future<bool> signInWithEmail(String email) async {
     _isLoading = true;
     _error = null;
@@ -77,7 +105,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // UPDATED: Added captchaToken parameter
   Future<bool> signUp({
     required String email,
     required String password,
@@ -88,7 +115,7 @@ class AuthProvider extends ChangeNotifier {
     String city = 'Shillong',
     String partnerType = 'individual',
     String? groupName,
-    String? captchaToken,  // NEW
+    String? captchaToken,
   }) async {
     _isLoading = true;
     _error = null;
@@ -99,7 +126,7 @@ class AuthProvider extends ChangeNotifier {
         email: email,
         password: password,
         emailRedirectTo: 'io.supabase.welist://login-callback',
-        captchaToken: captchaToken,  // NEW: Pass captcha token
+        captchaToken: captchaToken,
         data: {
           'full_name': name,
           'role': role,
@@ -113,6 +140,8 @@ class AuthProvider extends ChangeNotifier {
 
       if (response.user != null) {
         await _loadUserProfile(response.user!.id);
+        // ✅ Register device after signup
+        await _registerDeviceForPush();
         return true;
       }
 
@@ -133,11 +162,10 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // UPDATED: Added captchaToken parameter
   Future<bool> signIn({
     required String email,
     required String password,
-    String? captchaToken,  // NEW
+    String? captchaToken,
   }) async {
     _isLoading = true;
     _error = null;
@@ -147,11 +175,13 @@ class AuthProvider extends ChangeNotifier {
       final response = await _supabase.auth.signInWithPassword(
         email: email,
         password: password,
-        captchaToken: captchaToken,  // NEW: Pass captcha token
+        captchaToken: captchaToken,
       );
 
       if (response.user != null) {
         await _loadUserProfile(response.user!.id);
+        // ✅ Register device after login
+        await _registerDeviceForPush();
         return true;
       }
 
@@ -172,7 +202,6 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  // NEW: Google Sign In placeholder
   Future<bool> signInWithGoogle() async {
     _isLoading = true;
     _error = null;
@@ -184,6 +213,7 @@ class AuthProvider extends ChangeNotifier {
         redirectTo: 'io.supabase.welist://login-callback',
       );
 
+      // Note: Device registration happens in auth state listener
       _isLoading = false;
       notifyListeners();
       return response;
@@ -197,6 +227,12 @@ class AuthProvider extends ChangeNotifier {
 
   Future<void> signOut() async {
     try {
+      // ✅ Unregister device before signing out
+      if (_user != null) {
+        await _pushService.unregisterDevice(_user!.id);
+        debugPrint('✅ Device unregistered from push notifications');
+      }
+      
       await _authService.signOut();
       _user = null;
       _error = null;

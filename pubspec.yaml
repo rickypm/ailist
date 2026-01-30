@@ -12,6 +12,9 @@ dependencies:
 
   # Core
   cupertino_icons: ^1.0.6
+
+  firebase_core: ^3.15.2
+  firebase_messaging: ^15.2.10
   
   # Cloudflare Turnstile
   cloudflare_turnstile: ^1.2.6

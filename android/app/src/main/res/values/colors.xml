@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="splash_color">#2874f0</color>
+    <!-- ✅ Notification accent color -->
+    <color name="notification_color">#6366F1</color>
 </resources>

@@ -1,54 +1,36 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
+import 'package:provider/provider.dart';
 import 'config/app_config.dart';
 import 'config/theme.dart';
-import 'config/routes.dart'; // Added this import
 import 'providers/auth_provider.dart';
 import 'providers/data_provider.dart';
-import 'services/cache_service.dart';
-// import 'screens/splash_screen.dart'; // No longer needed as home because we use initialRoute
+import 'services/push_notification_service.dart';
+import 'screens/home/main_screen.dart';
 
 void main() async {
-  print('🟢🟢🟢 MAIN.DART LOADED 🟢🟢🟢');
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Set system UI style
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-    statusBarBrightness: Brightness.dark,
-    systemNavigationBarColor: AppColors.background,
-    systemNavigationBarIconBrightness: Brightness.light,
-  ));
+  // ✅ Initialize Firebase FIRST
+  await Firebase.initializeApp();
+  debugPrint('✅ Firebase initialized');
 
-  // Set preferred orientations
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.portraitUp,
-    DeviceOrientation.portraitDown,
-  ]);
-
-  // Initialize services
-  await _initializeServices();
-
-  runApp(const WeListApp());
-}
-
-Future<void> _initializeServices() async {
   // Initialize Supabase
   await Supabase.initialize(
     url: AppConfig.supabaseUrl,
     anonKey: AppConfig.supabaseAnonKey,
   );
+  debugPrint('✅ Supabase initialized');
 
-  // Initialize Cache
-  await CacheService.init();
+  // ✅ Initialize Push Notifications
+  await PushNotificationService().initialize();
+
+  runApp(const MyApp());
 }
 
-class WeListApp extends StatelessWidget {
-  const WeListApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -58,13 +40,67 @@ class WeListApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DataProvider()),
       ],
       child: MaterialApp(
-        title: AppConfig.appName,
+        title: 'AiList',
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.darkTheme,
-        // FIXED: Added route generator so named routes like '/signup' work
-        initialRoute: AppRoutes.splash,
-        onGenerateRoute: AppRoutes.generateRoute,
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          scaffoldBackgroundColor: AppColors.backgroundNavy,
+        ),
+        home: const AuthWrapper(),
       ),
+    );
+  }
+}
+
+class AuthWrapper extends StatefulWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  State<AuthWrapper> createState() => _AuthWrapperState();
+}
+
+class _AuthWrapperState extends State<AuthWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    _initializeAuth();
+  }
+
+  Future<void> _initializeAuth() async {
+    final authProvider = context.read<AuthProvider>();
+    await authProvider.initialize();
+
+    // ✅ Subscribe to topics based on user role
+    if (authProvider.isLoggedIn && authProvider.user != null) {
+      await PushNotificationService().subscribeToUserTopics(authProvider.user!.role);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        if (authProvider.isLoading) {
+          return Scaffold(
+            backgroundColor: AppColors.backgroundNavy,
+            body: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const CircularProgressIndicator(color: AppColors.primary),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Loading...',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        return const MainScreen();
+      },
     );
   }
 }
