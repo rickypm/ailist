@@ -12,6 +12,9 @@ dependencies:
 
   # Core
   cupertino_icons: ^1.0.6
+  
+  # Cloudflare Turnstile
+  cloudflare_turnstile: ^1.2.6
 
   # Supabase
   supabase_flutter: ^2.3.0
@@ -48,17 +51,28 @@ dependencies:
 
   # UUID
   uuid: ^4.3.3
+flutter_native_splash:
+  color: "#2874f0"
+  image: assets/images/logo.png
+  android_12:
+    image: assets/images/logo.png
+    icon_background_color: "#2874f0"
+  android: true
+  ios: true
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+  flutter_native_splash: ^2.4.0
 
 flutter:
   uses-material-design: true
 
   assets:
     - assets/fonts/
+    - assets/images/logo.png
     - assets/images/
     - assets/icons/
 

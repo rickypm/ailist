@@ -52,25 +52,19 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _initialize() async {
-    // Wait for animation
     await Future.delayed(const Duration(milliseconds: 2000));
 
     if (!mounted) return;
 
     final dataProvider = context.read<DataProvider>();
-    final authProvider = context.read<AuthProvider>();
     
-    // Load categories
     await dataProvider.loadCategories();
 
-    // ✅ FIX: Check if user is already logged in (restore session)
     final session = Supabase.instance.client.auth.currentSession;
     if (session != null) {
       debugPrint('✅ Session found, restoring user...');
-      // User is already logged in, initialize their data
       await dataProvider.initUser(session.user.id);
       
-      // Restore city from user profile to cache
       if (dataProvider.currentUser?.city != null) {
         await CacheService.setString('user_city', dataProvider.currentUser!.city!);
       }
@@ -80,7 +74,6 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (!mounted) return;
 
-    // Go to Main Screen
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (_, __, ___) => const MainScreen(),
@@ -105,60 +98,91 @@ class _SplashScreenState extends State<SplashScreen>
         decoration: const BoxDecoration(
           gradient: AppColors.loginGradient,
         ),
-        child: Center(
-          child: AnimatedBuilder(
-            animation: _controller,
-            builder: (context, child) {
-              return FadeTransition(
-                opacity: _fadeAnimation,
-                child: ScaleTransition(
-                  scale: _scaleAnimation,
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Logo Text
-                      Text(
-                        AppConfig.appName,
-                        style: AppTextStyles.logo.copyWith(
-                          color: AppColors.white,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black.withOpacity(0.3),
-                              offset: const Offset(0, 4),
-                              blurRadius: 12,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Tagline
-                      Text(
-                        AppConfig.appTagline,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: AppColors.white.withOpacity(0.9),
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      const SizedBox(height: 48),
-
-                      // Loading indicator
-                      SizedBox(
-                        width: 40,
-                        height: 40,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 3,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            AppColors.white.withOpacity(0.8),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // Main content - centered
+              Expanded(
+                child: Center(
+                  child: FadeTransition(
+                    opacity: _fadeAnimation,  // ✅ Fixed: removed 'animation' parameter
+                    child: ScaleTransition(
+                      scale: _scaleAnimation,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 64),
+                          Image.asset(
+                            'assets/images/logo.png',
+                            height: 110,
                           ),
-                        ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'AiList',
+                            style: AppTextStyles.logo.copyWith(
+                              color: AppColors.white,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black.withOpacity(0.3),
+                                  offset: const Offset(0, 4),
+                                  blurRadius: 12,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            AppConfig.appTagline,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppColors.white.withOpacity(0.9),
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          const SizedBox(height: 48),
+                          SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.white.withOpacity(0.8),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              );
-            },
+              ),
+              // Footer
+              Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Ricky Paul Marwein',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.6),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '© ${DateTime.now().year} Latynrai Creatives Pvt. Ltd.',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.4),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
       ),

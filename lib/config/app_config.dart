@@ -24,7 +24,7 @@ class AppConfig {
   // APP INFO
   // ============================================================
   
-  static const String appName = 'ailist';
+  static const String appName = '';
   static const String appDisplayName = 'AiList';
   static const String appVersion = '1.0.0';
   static const String appBuildNumber = '1';
