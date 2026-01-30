@@ -105,41 +105,44 @@ class _SplashScreenState extends State<SplashScreen>
               Expanded(
                 child: Center(
                   child: FadeTransition(
-                    opacity: _fadeAnimation,  // ✅ Fixed: removed 'animation' parameter
+                    opacity: _fadeAnimation,
                     child: ScaleTransition(
                       scale: _scaleAnimation,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 64),
+                          //const SizedBox(height: 64),
+                          
+                          // FIXED: Logo - larger size, no cropping, original color
+                          Stack(
+                            alignment: Alignment.center,
+                            clipBehavior: Clip.none,
+                            children: [
                           Image.asset(
                             'assets/images/logo.png',
-                            height: 110,
+                            width: 180,   // Larger size
+                            height: 180,  // Larger size
+                            fit: BoxFit.contain,  // Prevent cropping
                           ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'AiList',
-                            style: AppTextStyles.logo.copyWith(
-                              color: AppColors.white,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black.withOpacity(0.3),
-                                  offset: const Offset(0, 4),
-                                  blurRadius: 12,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            AppConfig.appTagline,
+                          
+                          //const SizedBox(height: 2),
+                          
+                          // FIXED: Removed duplicate "AiList" text, only tagline now
+                        Positioned(
+                          bottom: -30,
+                          child: Text(
+                            'Find local services with AI',
                             style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 18,
                               color: AppColors.white.withOpacity(0.9),
                               fontWeight: FontWeight.w400,
                             ),
                           ),
-                          const SizedBox(height: 48),
+                         ),
+                       ],
+                      ),
+                          const SizedBox(height: 60),
+                          
                           SizedBox(
                             width: 40,
                             height: 40,
